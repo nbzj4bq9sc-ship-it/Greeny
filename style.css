@@ -141,30 +141,6 @@ select {
   margin: 8px 0 0;
 }
 
-.temperature-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.temperature-label label {
-  margin: 0;
-}
-
-output {
-  color: var(--warm);
-  white-space: nowrap;
-}
-
-input[type=range] {
-  width: 100%;
-  min-height: 48px;
-  margin: 4px 0 0;
-  accent-color: var(--green);
-}
-
 .primary,.share-btn {
   width: 100%;
   margin-top: 24px;
@@ -211,6 +187,21 @@ button:hover {
 
 .reason {
   color: var(--warm);
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.reason li + li {
+  margin-top: 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 .tip {
@@ -275,9 +266,6 @@ footer {
   }
   .card {
     padding: 18px;
-  }
-  .temperature-label {
-    align-items: flex-start;
   }
   h1 {
     font-size: 28px;

@@ -1,29 +1,37 @@
 # Plants
 
-A small bilingual plant-care app with a playful conditions-match score. Choose a plant, describe watering and light, then get an animated result, care pointers and a shareable summary. No framework or build step.
+Would your plant survive your actual routine? A small, playful bilingual app: pick one of 69 houseplants, describe watering, light and drainage, face the animated verdict, get practical care tips and share it. The warm dark design stays responsive. No framework or application build step.
 
 ## Develop
-
-Use the existing checkout:
 
 ```sh
 cd /workspace/Plants
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-Open the local server in your development browser. No API keys, package installation or backend are needed. Scripts load in order: care profiles (`plants.js`), French/English copy (`translations.js`), UI and interactions (`script.js`). Styles live in `style.css`.
+No API keys, package installation or backend are needed. `plants.js` holds the sourced catalogue, `translations.js` holds UI copy, `score.js` calculates the game score, and `script.js` handles rendering and interactions. Styles are in `style.css`.
 
 ## Verify
 
-With the server running, Node.js, Playwright and Chromium installed:
+With Node.js, Playwright, Chromium and the server running:
 
 ```sh
 node --check plants.js
 node --check translations.js
+node --check score.js
 node --check script.js
+node --test tests/score.test.cjs
 node tests/browser.cjs
 ```
 
-The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. It covers both languages, stored preference, switching after and during calculation, all 47 profiles, widths from 320 to 1280px, reduced motion, native sharing and clipboard/manual fallbacks, legacy and malformed history, blocked storage and rapid repeated calculations. Native sharing is mocked: device share sheets still need a real-device check.
+The score tests cover concrete source-backed examples, watering differences, light tolerance, forest versus desert cacti, special Guzmania care, drainage, coarse bounds and improving conditions across every valid combination. Browser tests cover bilingual alphabetical sorting, preserved choices and verdicts, all 69 plants, mobile widths, touch controls, reduced motion, sharing fallbacks, legacy history and unavailable storage. The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. Native sharing is mocked; the operating system's share sheet still needs a real-device check.
 
-Read [SOURCES.md](SOURCES.md) for profile scope, scoring, history compatibility and the verified NC State Extension references. The qualitative profiles are simplified guidance, not measurements or predictions.
+To generate a self-contained interactive review file outside the checkout:
+
+```sh
+python3 tools/preview.py /workspace/previews/plants.html
+```
+
+Open the downloaded HTML in a browser. Its desktop, 390px and 320px controls resize the app without resetting it. Native sharing and clipboard access depend on browser permissions and may require HTTPS; manual copying remains available.
+
+See [SOURCES.md](SOURCES.md) for the 69 references, botanical scope, catalogue exclusions, scoring rules and why the nonfunctional temperature input was removed. The score is a game, not a scientific survival probability.

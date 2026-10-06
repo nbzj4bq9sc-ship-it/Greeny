@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>Plants · A little care goes a long way</title>
+  <title>Plants · Will your plant survive?</title>
   <link rel="stylesheet" href="style.css">
   <script src="plants.js" defer></script>
   <script src="translations.js" defer></script>
+  <script src="score.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -17,18 +18,17 @@
     <form id="conditions" class="card">
       <label for="plantSelect" data-i18n="plant"></label><select id="plantSelect" name="plant" aria-describedby="botanical"></select>
       <p id="botanical" class="hint"></p>
-      <label for="water" data-i18n="water"></label><select id="water" name="water"><option value="dry" data-i18n="dry"></option><option value="surface" data-i18n="surface"></option><option value="moist" data-i18n="moist"></option><option value="tank" data-i18n="tank" hidden disabled></option></select>
-      <p class="hint" data-i18n="waterHint"></p>
-      <label for="light" data-i18n="light"></label><select id="light" name="light" aria-describedby="lightHint"><option value="low" data-i18n="low"></option><option value="indirect" data-i18n="indirect"></option><option value="partial" data-i18n="partial"></option><option value="sun" data-i18n="sun"></option></select>
+      <label for="water" data-i18n="water"></label><select id="water" name="water" required aria-describedby="waterHint"></select>
+      <p id="waterHint" class="hint"></p>
+      <label for="light" data-i18n="light"></label><select id="light" name="light" required aria-describedby="lightHint"><option value="" disabled selected data-i18n="chooseLight"></option><option value="low" data-i18n="low"></option><option value="indirect" data-i18n="indirect"></option><option value="partial" data-i18n="partial"></option><option value="sun" data-i18n="sun"></option></select>
       <p id="lightHint" class="hint" data-i18n="lightHint"></p>
-    <div class="temperature-label"><label for="temperature" data-i18n="temperature"></label><output id="tempValue" for="temperature">22 °C</output></div>
-      <input type="range" min="10" max="35" value="22" id="temperature" name="temperature" aria-describedby="temperatureHint">
-      <p id="temperatureHint" class="hint" data-i18n="temperatureHint"></p>
+      <label for="drainage" data-i18n="drainage"></label><select id="drainage" name="drainage" aria-describedby="drainageHint"><option value="drained" data-i18n="drained"></option><option value="wet" data-i18n="wet"></option><option value="unknown" selected data-i18n="unknown"></option></select>
+      <p id="drainageHint" class="hint" data-i18n="drainageHint"></p>
       <button class="primary" type="submit" data-i18n="calculate"></button>
     </form>
     <section id="result" class="result card" aria-labelledby="resultTitle" hidden>
       <h2 id="resultTitle" data-i18n="resultTitle"></h2><div class="score" aria-hidden="true">0%</div><span class="emoji" aria-hidden="true">🌿</span>
-      <div id="resultText" aria-live="polite" aria-atomic="true"><p class="message"></p><p class="reason"></p><p class="tip"></p></div>
+      <div id="resultText" aria-live="polite" aria-atomic="true"><span id="accessibleScore" class="sr-only"></span><p class="message"></p><ul class="reason"></ul><p class="tip"></p></div>
       <p class="hint" data-i18n="scoreHint"></p>
       <a id="source" target="_blank" rel="noopener noreferrer" data-i18n="source"></a>
       <button id="shareBtn" type="button" class="share-btn" data-i18n="share"></button>

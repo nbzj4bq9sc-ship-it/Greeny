@@ -1,7 +1,7 @@
 'use strict';
 const $ = selector => document.querySelector(selector);
 const readStorage = key => { try { return localStorage.getItem(key); } catch { return null; } };
-const writeStorage = (key, value) => { try { localStorage.setItem(key, value); } catch { /* Private mode or a full storage must not block the result. */ } };
+const writeStorage = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
 const savedLanguage = readStorage('plantsLanguage');
 let language = ['fr', 'en'].includes(savedLanguage) ? savedLanguage : (navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en');
 let result = null;
@@ -10,83 +10,112 @@ let shareStatus = '';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const t = key => translations[language][key];
 const format = (text, values) => text.replace(/\{(\w+)\}/g, (_, key) => values[key]);
-const matchesWater = (plant, value) => (plant.acceptedWater || [plant.water]).includes(value);
-const matchesLight = (plant, value) => (plant.acceptedLight || [plant.light]).includes(value);
+const formatScore = score => `${score}${language === 'fr' ? ' %' : '%'}`;
 
 function renderResult() {
   if (!result) return;
   const plant = plants.find(item => item.id === result.plantId);
-  $('.message').textContent = `${result.score}${language === 'fr' ? ' %' : '%'} · ${t('messages')[Math.min(3, Math.floor(result.score / 30))]}`;
-  const advice = [];
-  if (!matchesWater(plant, result.water)) advice.push(format(t('waterAdvice'), { water: t({ dry: 'careDry', surface: 'careSurface', moist: 'careMoist', tank: 'careTank' }[plant.water]) }));
-  if (!matchesLight(plant, result.light)) advice.push(format(t('lightAdvice'), { light: t(plant.light).toLocaleLowerCase(language) }));
-  $('.reason').textContent = advice.join(' ') || t('matched');
+  $('#resultTitle').textContent = format(t('resultTitle'), { plant: plant.name[language] });
+  $('#accessibleScore').textContent = format(t('accessibleScore'), { score: result.score });
+  $('.message').textContent = t('verdicts')[verdictIndex(result.score)];
+  $('.score').textContent = formatScore(animation ? parseInt($('.score').textContent) || 0 : result.score);
+  const advice = result.issues.map(issue => {
+    const item = document.createElement('li');
+    item.textContent = `−${issue.points} · ${format(t('issues')[issue.type], {
+      water: t('careWater')[plant.water], light: t('careLight')[plant.light.ideal[0]],
+    })}`;
+    return item;
+  });
+  if (!advice.length) {
+    const item = document.createElement('li');
+    item.textContent = t('matched');
+    advice.push(item);
+  }
+  $('.reason').replaceChildren(...advice);
   $('.tip').textContent = plant.note[language];
   $('#source').href = plant.sourceUrl;
 }
+
+function renderWater(plant) {
+  const previous = $('#water').value;
+  const choices = plant.water === 'tank' ? { dry: 'tankDry', tank: 'tank', moist: 'tankWet' } : { dry: 'dry', surface: 'surface', moist: 'moist' };
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.disabled = true;
+  placeholder.textContent = t('chooseWater');
+  const options = Object.entries(choices).map(([value, key]) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = t(key);
+    return option;
+  });
+  $('#water').replaceChildren(placeholder, ...options);
+  $('#water').value = Object.hasOwn(choices, previous) ? previous : '';
+  $('#waterHint').textContent = t(plant.water === 'tank' ? 'tankHint' : 'waterHint');
+}
+
+function updatePlant() {
+  const plant = plants.find(item => item.id === $('#plantSelect').value);
+  $('#botanical').textContent = plant.botanical;
+  renderWater(plant);
+}
+
 function renderLanguage() {
   document.documentElement.lang = language;
   document.title = t('pageTitle');
   document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
-  const selection = $('#plantSelect').value;
-  $('#plantSelect').replaceChildren(...plants.map(plant => {
+  const selection = $('#plantSelect').value || 'pothos';
+  const collator = new Intl.Collator(language, { sensitivity: 'base' });
+  $('#plantSelect').replaceChildren(...[...plants].sort((a, b) => collator.compare(a.name[language], b.name[language])).map(plant => {
     const option = document.createElement('option');
     option.value = plant.id;
     option.textContent = plant.name[language];
     return option;
   }));
-  if (selection) $('#plantSelect').value = selection;
+  $('#plantSelect').value = selection;
   $('#language').textContent = language === 'fr' ? 'FR / EN' : 'EN / FR';
   $('#language').setAttribute('aria-label', t('language'));
   $('#shareFallback').setAttribute('aria-label', t('shareLabel'));
   $('#shareStatus').textContent = shareStatus ? t(shareStatus) : '';
-  updateBotanical();
+  updatePlant();
   renderResult();
   if (!$('#shareFallback').hidden && result) $('#shareFallback').value = shareText();
 }
-function updateBotanical() {
-  const plant = plants.find(item => item.id === $('#plantSelect').value);
-  $('#botanical').textContent = plant.botanical;
-  const tank = $('#water option[value=tank]');
-  tank.hidden = tank.disabled = plant.water !== 'tank';
-  if (tank.disabled && $('#water').value === 'tank') $('#water').value = 'surface';
-}
+
 function saveHistory() {
   let history;
   try { history = JSON.parse(readStorage('plantHistory') || '[]'); } catch { history = []; }
   if (!Array.isArray(history)) history = [];
-  // Keep legacy entries intact; new entries use stable IDs rather than translated names.
-  history.push({ ...result, schemaVersion: 2, kind: 'conditions-match', date: new Date().toISOString() });
+  history.push({ ...result, schemaVersion: 3, kind: 'care-game', date: new Date().toISOString() });
   writeStorage('plantHistory', JSON.stringify(history));
 }
+
 function finishAnimation() {
   cancelAnimationFrame(animation);
   animation = 0;
-  if (result) $('.score').textContent = `${result.score}%`;
+  if (result) $('.score').textContent = formatScore(result.score);
 }
+
 function animateScore() {
   cancelAnimationFrame(animation);
-  if (reducedMotion.matches) { finishAnimation(); return; }
+  if (reducedMotion.matches || result.score === 0) { finishAnimation(); return; }
   const start = performance.now();
-  $('.score').textContent = '0%';
+  $('.score').textContent = formatScore(0);
   function frame(now) {
     const progress = Math.min(1, (now - start) / 800);
-    $('.score').textContent = `${Math.round(result.score * (1 - (1 - progress) ** 3))}%`;
-    if (progress < 1) animation = requestAnimationFrame(frame);
-    else animation = 0;
+    $('.score').textContent = formatScore(Math.round(result.score * (1 - (1 - progress) ** 3)));
+    animation = progress < 1 ? requestAnimationFrame(frame) : 0;
   }
   animation = requestAnimationFrame(frame);
 }
+
 $('#conditions').addEventListener('submit', event => {
   event.preventDefault();
   const plant = plants.find(item => item.id === $('#plantSelect').value);
-  const water = $('#water').value;
-  const light = $('#light').value;
-  // Equal editorial weights, not measured biological probabilities. Temperature is deliberately unscored.
-  const score = (matchesWater(plant, water) ? 50 : 0) + (matchesLight(plant, light) ? 50 : 0);
-  result = { plantId: plant.id, water, light, temperature: Number($('#temperature').value), score };
+  const conditions = { water: $('#water').value, light: $('#light').value, drainage: $('#drainage').value };
+  result = { plantId: plant.id, ...conditions, ...calculateScore(plant, conditions) };
   $('#result').hidden = false;
-  $('.emoji').textContent = score === 100 ? '🌿' : score === 50 ? '🌱' : '🪴';
+  $('.emoji').textContent = result.score >= 70 ? '🌿' : result.score >= 40 ? '🌱' : '🪴';
   shareStatus = '';
   $('#shareStatus').textContent = '';
   $('#shareFallback').hidden = true;
@@ -99,12 +128,12 @@ $('#language').addEventListener('click', () => {
   writeStorage('plantsLanguage', language);
   renderLanguage();
 });
-$('#plantSelect').addEventListener('change', updateBotanical);
-$('#temperature').addEventListener('input', () => { $('#tempValue').textContent = `${$('#temperature').value} °C`; });
+$('#plantSelect').addEventListener('change', updatePlant);
 reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) finishAnimation(); });
+
 function shareText() {
   const plant = plants.find(item => item.id === result.plantId);
-  return `${format(t('shareText'), { plant: plant.name[language], score: result.score })}\nhttps://nbzj4bq9sc-ship-it.github.io/Plants/`;
+  return `${format(t('shareText'), { plant: plant.name[language], score: result.score, verdict: t('verdicts')[verdictIndex(result.score)] })}\nhttps://nbzj4bq9sc-ship-it.github.io/Plants/`;
 }
 $('#shareBtn').addEventListener('click', async () => {
   if (!result) return;
@@ -116,12 +145,11 @@ $('#shareBtn').addEventListener('click', async () => {
   try {
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Plants', text });
+        await navigator.share({ title: t('pageTitle'), text });
         shareStatus = 'shared';
         return;
       } catch (error) {
         if (error.name === 'AbortError') return;
-        // A platform refusal can still fall back to copying.
       }
     }
     try {
