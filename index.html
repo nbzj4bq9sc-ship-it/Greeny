@@ -1,63 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Will my plant survive?</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Plants · A little care goes a long way</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="plants.js" defer></script>
+  <script src="translations.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
 <body>
-
-  <div class="app">
-    <h1>🌱 Will my plant survive?</h1>
-    <p class="subtitle">A quick estimation. Be honest. We will.</p>
-
-    <div class="card">
-      <label>Plant</label>
-      <select id="plantSelect"></select>
-
-      <label>Watering (times per week)</label>
-      <select id="water">
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3+</option>
-      </select>
-
-      <label>Light</label>
-      <select id="light">
-        <option value="1">Low light</option>
-        <option value="2">Medium light</option>
-        <option value="3">Bright light</option>
-      </select>
-
-      <label>Temperature (°C)</label>
-      <input type="range" min="10" max="35" value="22" id="temperature" />
-
-      <span id="tempValue">22°C</span>
-
-      <button onclick="calculate()">Face the truth</button>
-    </div>
-
-    <div id="result" class="result hidden">
-      <div class="score">0%</div>
-      <div class="emoji" style="font-size: 48px;">🌿</div>
-      <p class="message"></p>
-      <p class="reason"></p>
-      <p class="tip"></p>
-      <button id="shareBtn" class="share-btn hidden">Share my plant skills 😎</button>
-    </div>
-
-    <p class="disclaimer">
-      Not science. Just experience. Plants sometimes have personality.
-    </p>
-
-    <p class="credits">
-      Created by Romain Daney. Inspired by houseplant care guides. 🌱
-    </p>
-  </div>
-
-  <script src="plants.js"></script>
-  <script src="script.js"></script>
+  <main class="app">
+    <header class="topbar"><a class="brand" href="./" aria-label="Plants">🌱 Plants</a><button id="language" class="language" type="button">FR / EN</button></header>
+    <section class="intro"><p class="eyebrow" data-i18n="eyebrow"></p><h1 data-i18n="title"></h1><p class="subtitle" data-i18n="subtitle"></p></section>
+    <form id="conditions" class="card">
+      <label for="plantSelect" data-i18n="plant"></label><select id="plantSelect" name="plant" aria-describedby="botanical"></select>
+      <p id="botanical" class="hint"></p>
+      <label for="water" data-i18n="water"></label><select id="water" name="water"><option value="dry" data-i18n="dry"></option><option value="surface" data-i18n="surface"></option><option value="moist" data-i18n="moist"></option></select>
+      <p class="hint" data-i18n="waterHint"></p>
+      <label for="light" data-i18n="light"></label><select id="light" name="light"><option value="low" data-i18n="low"></option><option value="indirect" data-i18n="indirect"></option><option value="sun" data-i18n="sun"></option></select>
+      <div class="temperature-label"><label for="temperature" data-i18n="temperature"></label><output id="tempValue" for="temperature">22 °C</output></div>
+      <input type="range" min="10" max="35" value="22" id="temperature" name="temperature" aria-describedby="temperatureHint">
+      <p id="temperatureHint" class="hint" data-i18n="temperatureHint"></p>
+      <button class="primary" type="submit" data-i18n="calculate"></button>
+    </form>
+    <section id="result" class="result card" aria-labelledby="resultTitle" hidden>
+      <h2 id="resultTitle" data-i18n="resultTitle"></h2><div class="score" aria-hidden="true">0%</div><span class="emoji" aria-hidden="true">🌿</span>
+      <div id="resultText" aria-live="polite" aria-atomic="true"><p class="message"></p><p class="reason"></p><p class="tip"></p></div>
+      <p class="hint" data-i18n="scoreHint"></p>
+      <a id="source" lang="en" target="_blank" rel="noopener noreferrer" data-i18n="source"></a>
+      <button id="shareBtn" type="button" class="share-btn" data-i18n="share"></button>
+      <p id="shareStatus" role="status"></p>
+      <textarea id="shareFallback" readonly hidden aria-label="Share text"></textarea>
+    </section>
+    <footer><p class="disclaimer" data-i18n="disclaimer"></p><p class="credits" data-i18n="credits"></p></footer>
+  </main>
 </body>
 </html>

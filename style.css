@@ -1,163 +1,286 @@
+:root {
+  color-scheme: dark;
+  --bg: #19231f;
+  --card: #24322b;
+  --text: #f2efe5;
+  --muted: #bdc9be;
+  --green: #c5dfb0;
+  --warm: #efc3a3;
+  --border: #46594c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f6f3ee;
-  color: #333;
+  background: radial-gradient(ellipse at top left,#33443a 0,transparent 65%),var(--bg);
+  color: var(--text);
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
 .app {
-  max-width: 420px;
+  width: 100%;
+  max-width: 560px;
   margin: auto;
-  padding: 20px;
+  padding: 24px 20px 36px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  font-weight: 750;
+  font-size: 24px;
+  text-decoration: none;
+  color: var(--green);
+}
+
+button,select,input,textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 12px 20px;
+  font-weight: 650;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.language {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  min-width: 96px;
+  margin: 0;
+}
+
+.intro {
+  padding: 28px 0 20px;
+}
+
+.eyebrow {
+  color: var(--warm);
+  font-size: 13px;
+  letter-spacing: .08em;
+  margin: 0;
 }
 
 h1 {
-  text-align: center;
-  margin-bottom: 5px;
+  font-size: clamp(28px,6vw,38px);
+  line-height: 1.2;
+  margin: 12px 0;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 550;
+  margin: 0;
 }
 
 .subtitle {
-  text-align: center;
-  color: #666;
-  margin-bottom: 20px;
+  color: var(--muted);
+  margin: 14px 0 0;
 }
 
 .card {
-  background: #fffaf2;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 14px 40px #0002;
 }
 
 label {
   display: block;
-  margin-top: 15px;
-  font-weight: 500;
+  font-weight: 600;
+  margin-top: 20px;
 }
 
-select, input[type=range], button {
+label:first-child {
+  margin-top: 0;
+}
+
+select {
   width: 100%;
-  padding: 12px;
+  min-width: 0;
+  min-height: 52px;
   margin-top: 8px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  padding: 12px;
+  color: var(--text);
+  background: #1c2922;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   font-size: 16px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.temperature-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.temperature-label label {
+  margin: 0;
+}
+
+output {
+  color: var(--warm);
+  white-space: nowrap;
 }
 
 input[type=range] {
-  padding: 0;
+  width: 100%;
+  min-height: 48px;
+  margin: 4px 0 0;
+  accent-color: var(--green);
 }
 
-button {
-  margin-top: 20px;
-  background: #d8e2c8;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
+.primary,.share-btn {
+  width: 100%;
+  margin-top: 24px;
+  background: var(--green);
+  color: #19231f;
+}
+
+.share-btn {
+  background: var(--warm);
 }
 
 button:hover {
-  background: #cddbb9;
+  filter: brightness(1.07);
+}
+
+:focus-visible {
+  outline: 3px solid var(--warm);
+  outline-offset: 4px;
 }
 
 .result {
-  margin-top: 20px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
   text-align: center;
-}
-
-.hidden {
-  display: none;
+  margin-top: 24px;
+  animation: appear .3s ease-out;
 }
 
 .score {
-  font-size: 36px;
-  font-weight: bold;
-  transition: all 0.5s ease;
+  font-size: 64px;
+  line-height: 1.3;
+  font-weight: 750;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  margin-top: 12px;
 }
 
 .emoji {
-  margin: 10px 0;
-  font-size: 48px;
-  transition: transform 0.5s;
+  font-size: 30px;
 }
 
-.tip, .message {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.5s ease;
+.message {
+  font-weight: 650;
+  font-size: 19px;
 }
 
-.tip.show, .message.show {
-  opacity: 1;
-  transform: translateY(0);
+.reason {
+  color: var(--warm);
 }
 
 .tip {
-  margin-top: 10px;
-  font-style: italic;
-  color: #555;
+  color: var(--muted);
 }
 
-/* Share button */
-.share-btn {
-  margin-top: 15px;
+a {
+  color: var(--green);
+  overflow-wrap: anywhere;
+}
+
+.result a {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+#shareStatus:empty {
+  display: none;
+}
+
+textarea {
   width: 100%;
+  min-height: 140px;
+  margin-top: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #cde2f0;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 16px;
+  border-radius: 12px;
 }
 
-.share-btn:hover {
-  background: #b6d4e8;
-}
-
-.disclaimer {
+footer {
   text-align: center;
+  color: var(--muted);
   font-size: 12px;
-  color: #777;
-  margin-top: 20px;
+  padding: 16px 8px;
 }
 
 .credits {
-  text-align: center;
-  font-size: 10px;
-  color: #777;
-  margin-top: 10px;
+  font-size: 11px;
 }
 
-/* Animations */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
+[hidden] {
+  display: none !important;
 }
 
-@keyframes bounce {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (max-width: 360px) {
+  .app {
+    padding: 16px 12px 28px;
+  }
+  .card {
+    padding: 18px;
+  }
+  .temperature-label {
+    align-items: flex-start;
+  }
+  h1 {
+    font-size: 28px;
+  }
 }
 
-.score.pulse {
-  animation: pulse 0.5s ease-in-out;
-}
-
-.score.bounce {
-  animation: bounce 0.3s ease-in-out;
-}
-
-.message.fade-in, .tip.fade-in, .share-btn.fade-in {
-  animation: fadeIn 0.5s ease-in forwards;
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

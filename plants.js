@@ -1,49 +1,476 @@
+// Broad care profiles for potted plants; see SOURCES.md for scope and limitations.
 const plants = [
-  {name:"Aloe Vera", water:2, light:4, temp:22, tip:"Keep in bright, indirect light. Water when soil dry."},
-  {name:"Spider Plant", water:3, light:3, temp:21, tip:"Prefers moderate light. Avoid overwatering."},
-  {name:"Peace Lily", water:4, light:2, temp:24, tip:"Low light okay. Keep soil moist."},
-  {name:"Snake Plant", water:1, light:3, temp:23, tip:"Can survive low light. Let soil dry completely between waterings."},
-  {name:"Pothos", water:3, light:3, temp:22, tip:"Tolerates low light. Water when top inch dry."},
-  {name:"Fiddle Leaf Fig", water:2, light:5, temp:25, tip:"Needs bright light. Water when soil dry."},
-  {name:"Rubber Plant", water:2, light:4, temp:23, tip:"Bright indirect light. Moderate watering."},
-  {name:"Dracaena", water:2, light:3, temp:22, tip:"Tolerates low light. Keep soil slightly moist."},
-  {name:"ZZ Plant", water:1, light:2, temp:22, tip:"Low light. Very drought tolerant."},
-  {name:"Boston Fern", water:4, light:3, temp:20, tip:"Likes humidity. Keep soil moist."},
-  {name:"Jade Plant", water:1, light:5, temp:23, tip:"Needs bright light. Allow soil to dry between waterings."},
-  {name:"Begonia", water:3, light:3, temp:21, tip:"Indirect light. Keep soil moist but not soggy."},
-  {name:"African Violet", water:3, light:3, temp:22, tip:"Bright indirect light. Water from bottom."},
-  {name:"Orchid", water:2, light:4, temp:24, tip:"Bright indirect light. Water weekly."},
-  {name:"Calathea", water:4, light:2, temp:22, tip:"Low light. Keep soil consistently moist."},
-  {name:"Philodendron", water:3, light:3, temp:22, tip:"Moderate light. Let topsoil dry slightly between waterings."},
-  {name:"Monstera", water:3, light:4, temp:22, tip:"Bright indirect light. Water moderately."},
-  {name:"Bromeliad", water:2, light:3, temp:23, tip:"Indirect light. Keep center cup filled with water."},
-  {name:"Cactus", water:1, light:5, temp:25, tip:"Bright light. Water sparingly."},
-  {name:"Lavender", water:2, light:5, temp:24, tip:"Needs full sun. Water when dry."},
-  {name:"Mint", water:4, light:3, temp:22, tip:"Indirect light. Keep soil moist."},
-  {name:"Rosemary", water:2, light:5, temp:23, tip:"Bright sun. Water when soil dry."},
-  {name:"Basil", water:3, light:4, temp:22, tip:"Bright indirect light. Keep soil moist."},
-  {name:"Thyme", water:2, light:5, temp:23, tip:"Needs bright light. Allow soil to dry."},
-  {name:"Parsley", water:3, light:4, temp:22, tip:"Moderate light. Keep soil moist."},
-  {name:"Chives", water:3, light:4, temp:21, tip:"Moderate light. Water regularly."},
-  {name:"Sage", water:2, light:5, temp:23, tip:"Full sun. Let soil dry between waterings."},
-  {name:"Oregano", water:2, light:5, temp:22, tip:"Bright sun. Water moderately."},
-  {name:"Lemon Balm", water:3, light:3, temp:22, tip:"Indirect light. Keep soil moist."},
-  {name:"Cilantro", water:3, light:4, temp:22, tip:"Bright indirect light. Keep soil moist."},
-  {name:"Echeveria", water:1, light:5, temp:24, tip:"Bright light. Water sparingly."},
-  {name:"Hoya", water:2, light:4, temp:22, tip:"Bright indirect light. Let soil dry between waterings."},
-  {name:"Kalanchoe", water:2, light:4, temp:23, tip:"Bright light. Water moderately."},
-  {name:"Pilea", water:3, light:3, temp:22, tip:"Indirect light. Water when topsoil dry."},
-  {name:"Peperomia", water:2, light:3, temp:22, tip:"Low to medium light. Let soil dry slightly."},
-  {name:"Schefflera", water:3, light:4, temp:22, tip:"Bright indirect light. Water moderately."},
-  {name:"Ficus", water:3, light:4, temp:22, tip:"Bright indirect light. Keep soil evenly moist."},
-  {name:"Anthurium", water:3, light:3, temp:23, tip:"Low to medium light. Keep soil moist."},
-  {name:"Begonia Rex", water:3, light:3, temp:22, tip:"Bright indirect light. Keep soil moist."},
-  {name:"Maranta", water:4, light:2, temp:22, tip:"Low light. Keep soil consistently moist."},
-  {name:"Dracaena Marginata", water:2, light:3, temp:22, tip:"Moderate light. Water when soil dry."},
-  {name:"Fatsia Japonica", water:3, light:3, temp:21, tip:"Indirect light. Keep soil moist."},
-  {name:"Cyclamen", water:3, light:3, temp:20, tip:"Indirect light. Water from bottom to avoid crown rot."},
-  {name:"Hibiscus", water:4, light:4, temp:24, tip:"Bright light. Keep soil consistently moist."},
-  {name:"Gardenia", water:4, light:4, temp:23, tip:"Bright indirect light. Keep soil moist."},
-  {name:"Bougainvillea", water:2, light:5, temp:24, tip:"Full sun. Allow soil to dry between waterings."},
-  {name:"Hydrangea", water:4, light:3, temp:22, tip:"Bright indirect light. Keep soil moist."}
+  {
+    "id": "aloe",
+    "name": {
+      "en": "Aloe vera",
+      "fr": "Aloès"
+    },
+    "botanical": "Aloe vera",
+    "water": "dry",
+    "light": "sun"
+  },
+  {
+    "id": "spider",
+    "name": {
+      "en": "Spider plant",
+      "fr": "Plante araignée"
+    },
+    "botanical": "Chlorophytum comosum",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "peace",
+    "name": {
+      "en": "Peace lily",
+      "fr": "Spathiphyllum"
+    },
+    "botanical": "Spathiphyllum",
+    "water": "moist",
+    "light": "indirect"
+  },
+  {
+    "id": "snake",
+    "name": {
+      "en": "Snake plant",
+      "fr": "Langue de belle-mère"
+    },
+    "botanical": "Dracaena trifasciata",
+    "water": "dry",
+    "light": "indirect"
+  },
+  {
+    "id": "pothos",
+    "name": {
+      "en": "Pothos",
+      "fr": "Pothos"
+    },
+    "botanical": "Epipremnum aureum",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "fiddle",
+    "name": {
+      "en": "Fiddle-leaf fig",
+      "fr": "Figuier lyre"
+    },
+    "botanical": "Ficus lyrata",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "rubber",
+    "name": {
+      "en": "Rubber plant",
+      "fr": "Caoutchouc"
+    },
+    "botanical": "Ficus elastica",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "dracaena",
+    "name": {
+      "en": "Dracaena",
+      "fr": "Dragonnier"
+    },
+    "botanical": "Dracaena fragrans",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "zz",
+    "name": {
+      "en": "ZZ plant",
+      "fr": "Plante ZZ"
+    },
+    "botanical": "Zamioculcas zamiifolia",
+    "water": "dry",
+    "light": "indirect"
+  },
+  {
+    "id": "fern",
+    "name": {
+      "en": "Boston fern",
+      "fr": "Fougère de Boston"
+    },
+    "botanical": "Nephrolepis exaltata",
+    "water": "moist",
+    "light": "indirect"
+  },
+  {
+    "id": "jade",
+    "name": {
+      "en": "Jade plant",
+      "fr": "Arbre de jade"
+    },
+    "botanical": "Crassula ovata",
+    "water": "dry",
+    "light": "sun"
+  },
+  {
+    "id": "begonia",
+    "name": {
+      "en": "Begonia",
+      "fr": "Bégonia"
+    },
+    "botanical": "Begonia",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "violet",
+    "name": {
+      "en": "African violet",
+      "fr": "Violette africaine"
+    },
+    "botanical": "Streptocarpus ionanthus",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "orchid",
+    "name": {
+      "en": "Moth orchid",
+      "fr": "Orchidée papillon"
+    },
+    "botanical": "Phalaenopsis",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "calathea",
+    "name": {
+      "en": "Calathea",
+      "fr": "Calathéa"
+    },
+    "botanical": "Goeppertia",
+    "water": "moist",
+    "light": "indirect"
+  },
+  {
+    "id": "philodendron",
+    "name": {
+      "en": "Heartleaf philodendron",
+      "fr": "Philodendron à feuilles en cœur"
+    },
+    "botanical": "Philodendron hederaceum",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "monstera",
+    "name": {
+      "en": "Monstera",
+      "fr": "Monstera"
+    },
+    "botanical": "Monstera deliciosa",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "bromeliad",
+    "name": {
+      "en": "Guzmania",
+      "fr": "Guzmania"
+    },
+    "botanical": "Guzmania",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "cactus",
+    "name": {
+      "en": "Desert cactus",
+      "fr": "Cactus du désert"
+    },
+    "botanical": "Cactaceae (desert types)",
+    "water": "dry",
+    "light": "sun"
+  },
+  {
+    "id": "lavender",
+    "name": {
+      "en": "English lavender",
+      "fr": "Lavande vraie"
+    },
+    "botanical": "Lavandula angustifolia",
+    "water": "surface",
+    "light": "sun"
+  },
+  {
+    "id": "mint",
+    "name": {
+      "en": "Mint",
+      "fr": "Menthe"
+    },
+    "botanical": "Mentha",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "rosemary",
+    "name": {
+      "en": "Rosemary",
+      "fr": "Romarin"
+    },
+    "botanical": "Salvia rosmarinus",
+    "water": "surface",
+    "light": "sun"
+  },
+  {
+    "id": "basil",
+    "name": {
+      "en": "Basil",
+      "fr": "Basilic"
+    },
+    "botanical": "Ocimum basilicum",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "thyme",
+    "name": {
+      "en": "Thyme",
+      "fr": "Thym"
+    },
+    "botanical": "Thymus vulgaris",
+    "water": "surface",
+    "light": "sun"
+  },
+  {
+    "id": "parsley",
+    "name": {
+      "en": "Parsley",
+      "fr": "Persil"
+    },
+    "botanical": "Petroselinum crispum",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "chives",
+    "name": {
+      "en": "Chives",
+      "fr": "Ciboulette"
+    },
+    "botanical": "Allium schoenoprasum",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "sage",
+    "name": {
+      "en": "Common sage",
+      "fr": "Sauge officinale"
+    },
+    "botanical": "Salvia officinalis",
+    "water": "surface",
+    "light": "sun"
+  },
+  {
+    "id": "oregano",
+    "name": {
+      "en": "Oregano",
+      "fr": "Origan"
+    },
+    "botanical": "Origanum vulgare",
+    "water": "surface",
+    "light": "sun"
+  },
+  {
+    "id": "balm",
+    "name": {
+      "en": "Lemon balm",
+      "fr": "Mélisse"
+    },
+    "botanical": "Melissa officinalis",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "cilantro",
+    "name": {
+      "en": "Coriander",
+      "fr": "Coriandre"
+    },
+    "botanical": "Coriandrum sativum",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "echeveria",
+    "name": {
+      "en": "Echeveria",
+      "fr": "Échévéria"
+    },
+    "botanical": "Echeveria",
+    "water": "dry",
+    "light": "sun"
+  },
+  {
+    "id": "hoya",
+    "name": {
+      "en": "Wax plant",
+      "fr": "Fleur de porcelaine"
+    },
+    "botanical": "Hoya carnosa",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "kalanchoe",
+    "name": {
+      "en": "Flaming Katy",
+      "fr": "Kalanchoé"
+    },
+    "botanical": "Kalanchoe blossfeldiana",
+    "water": "dry",
+    "light": "sun"
+  },
+  {
+    "id": "pilea",
+    "name": {
+      "en": "Chinese money plant",
+      "fr": "Pilea"
+    },
+    "botanical": "Pilea peperomioides",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "peperomia",
+    "name": {
+      "en": "Baby rubber plant",
+      "fr": "Pépéromia"
+    },
+    "botanical": "Peperomia obtusifolia",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "schefflera",
+    "name": {
+      "en": "Dwarf umbrella tree",
+      "fr": "Arbre ombrelle"
+    },
+    "botanical": "Heptapleurum arboricola",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "ficus",
+    "name": {
+      "en": "Weeping fig",
+      "fr": "Figuier pleureur"
+    },
+    "botanical": "Ficus benjamina",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "anthurium",
+    "name": {
+      "en": "Anthurium",
+      "fr": "Anthurium"
+    },
+    "botanical": "Anthurium andraeanum",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "rex",
+    "name": {
+      "en": "Rex begonia",
+      "fr": "Bégonia rex"
+    },
+    "botanical": "Begonia rex",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "maranta",
+    "name": {
+      "en": "Prayer plant",
+      "fr": "Maranta"
+    },
+    "botanical": "Maranta leuconeura",
+    "water": "moist",
+    "light": "indirect"
+  },
+  {
+    "id": "marginata",
+    "name": {
+      "en": "Madagascar dragon tree",
+      "fr": "Dragonnier de Madagascar"
+    },
+    "botanical": "Dracaena marginata",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "fatsia",
+    "name": {
+      "en": "Japanese aralia",
+      "fr": "Aralia du Japon"
+    },
+    "botanical": "Fatsia japonica",
+    "water": "surface",
+    "light": "indirect"
+  },
+  {
+    "id": "cyclamen",
+    "name": {
+      "en": "Florist’s cyclamen",
+      "fr": "Cyclamen des fleuristes"
+    },
+    "botanical": "Cyclamen persicum",
+    "water": "moist",
+    "light": "indirect"
+  },
+  {
+    "id": "hibiscus",
+    "name": {
+      "en": "Tropical hibiscus",
+      "fr": "Hibiscus tropical"
+    },
+    "botanical": "Hibiscus rosa-sinensis",
+    "water": "moist",
+    "light": "sun"
+  },
+  {
+    "id": "gardenia",
+    "name": {
+      "en": "Gardenia",
+      "fr": "Gardénia"
+    },
+    "botanical": "Gardenia jasminoides",
+    "water": "moist",
+    "light": "indirect"
+  },
+  {
+    "id": "bougainvillea",
+    "name": {
+      "en": "Bougainvillea",
+      "fr": "Bougainvillier"
+    },
+    "botanical": "Bougainvillea",
+    "water": "surface",
+    "light": "sun"
+  },
+  {
+    "id": "hydrangea",
+    "name": {
+      "en": "Bigleaf hydrangea",
+      "fr": "Hortensia"
+    },
+    "botanical": "Hydrangea macrophylla",
+    "water": "moist",
+    "light": "indirect"
+  }
 ];
+
+const sourceNames = {calathea:"calathea", cactus:"cactaceae", violet:"saintpaulia-ionantha", schefflera:"schefflera-arboricola"};
+plants.forEach(plant => { if (sourceNames[plant.id]) plant.source = sourceNames[plant.id]; });
