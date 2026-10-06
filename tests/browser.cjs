@@ -5,19 +5,17 @@ let checks = 0;
 const check = (value, message) => { assert.ok(value, message); checks++; };
 
 async function calculate(page, { plant = 'zz', water = 'dry', light = 'indirect', drainage = 'drained', expected = 100 } = {}) {
-  await page.selectOption('#plantSelect', plant);
+  await choosePlant(page, plant);
   await page.selectOption('#water', water);
   await page.selectOption('#light', light);
   await page.selectOption('#drainage', drainage);
   await page.locator('button[type=submit]').click();
   await page.waitForFunction(score => parseInt(document.querySelector('.score').textContent) === score, expected);
 }
-async function sorted(page) {
-  return page.locator('#plantSelect').evaluate(select => {
-    const names = [...select.options].map(option => option.textContent);
-    const compare = new Intl.Collator(document.documentElement.lang, { sensitivity: 'base' }).compare;
-    return names.every((name, index) => index === 0 || compare(names[index - 1], name) <= 0);
-  });
+async function choosePlant(page, id) {
+  const name = await page.evaluate(id => plants.find(plant => plant.id === id).name[document.documentElement.lang], id);
+  await page.locator('#plantSearch').fill(name);
+  await page.locator(`[data-plant-id="${id}"]`).click();
 }
 
 (async () => {
@@ -33,17 +31,58 @@ async function sorted(page) {
     const { context, page } = await make({ locale: 'fr-CA', viewport: { width: 320, height: 720 }, reducedMotion: 'reduce' });
     await page.goto(url);
     check(await page.locator('html').getAttribute('lang') === 'fr', 'French detected on first visit');
-    check(await page.locator('#plantSelect option').count() === 69, '69 houseplants rendered');
-    check(await sorted(page), 'French alphabetical order');
-    check(await page.locator('#plantSelect option').first().textContent() === 'Aeschynanthe', 'French common name used for sorting');
+    check(await page.evaluate(() => plants.length) === 69, 'catalogue unchanged');
     check(await page.locator('button[type=submit]').textContent() === 'Affronte la vérité', 'French button and informal tone');
     check(await page.locator('#temperature').count() === 0, 'decorative temperature slider removed');
-    check((await page.locator('#botanical').textContent()) === 'Epipremnum aureum', 'botanical detail for initial Pothos');
+    check((await page.locator('#plantSearch').inputValue()) === '', 'no plant selected implicitly');
     await page.locator('button[type=submit]').click();
     check(await page.locator('#result').isHidden(), 'unanswered habits do not produce an invented result');
-    for (const asset of ['plants.js', 'translations.js', 'score.js', 'script.js', 'style.css']) {
+    for (const asset of ['plants.js', 'translations.js', 'score.js', 'search.js', 'script.js', 'style.css']) {
       check((await page.request.get(new URL(asset, url).href)).status() === 200, `${asset} served`);
     }
+    await page.locator('#plantSearch').fill('SANSEVIERIA');
+    check(await page.locator('[role=option]').first().textContent() === 'Langue de belle-mèreDracaena trifasciata', 'synonym search and French common name first');
+    await page.locator('#plantSearch').press('ArrowDown');
+    check(await page.locator('#plantSearch').getAttribute('aria-activedescendant') === 'suggestion-snake', 'keyboard active option');
+    await page.locator('#plantSearch').press('Enter');
+    check(await page.evaluate(() => selectedPlantId) === 'snake' && await page.locator('#plantSuggestions').isHidden(), 'Enter selects species');
+    check(await page.locator('#plantSearch').evaluate(input => input === document.activeElement), 'selection retains input focus');
+    await page.locator('#plantSearch').fill('cactus');
+    await page.locator('#plantSearch').press('ArrowUp');
+    check(await page.locator('[role=option][aria-selected=true]').evaluate(option => option === option.parentElement.lastElementChild), 'ArrowUp starts with last suggestion');
+    await page.locator('#plantSearch').press('Home');
+    check(await page.locator('#plantSearch').getAttribute('aria-activedescendant') === 'suggestion-cactus', 'Home selects first matching option');
+    await page.locator('#plantSearch').press('End');
+    check(await page.locator('[role=option][aria-selected=true]').evaluate(option => option === option.parentElement.lastElementChild), 'End selects last matching option');
+    await page.locator('#plantSearch').press('Tab');
+    check(await page.locator('#plantSuggestions').isHidden(), 'Tab closes suggestions without selecting');
+    await choosePlant(page, 'snake');
+    await page.locator('#language').click();
+    check(await page.locator('#plantSearch').inputValue() === 'Snake plant', 'selection preserved when translated');
+    await page.locator('#language').click();
+    await page.locator('#clearSearch').click();
+    check(await page.locator('#plantSearch').inputValue() === '' && await page.evaluate(() => selectedPlantId) === null, 'clear removes selection');
+    check(await page.locator('[role=option]').count() === 6, 'short starter suggestions');
+    await page.locator('#plantSearch').fill('plante intergalactique');
+    check((await page.locator('#searchStatus').textContent()).includes('Aucune plante') && await page.locator('[role=option]').count() === 0, 'no-match message');
+    await page.locator('#water').selectOption('dry');
+    await page.locator('#light').selectOption('indirect');
+    await page.locator('button[type=submit]').click();
+    check(await page.locator('#result').isHidden(), 'unknown text cannot generate a result even with conditions');
+    await page.locator('#plantSearch').fill('orchidee');
+    check(await page.locator('[data-plant-id=orchid]').count() === 1, 'accents ignored');
+    await page.locator('#plantSearch').press('Escape');
+    check(await page.locator('#plantSuggestions').isHidden(), 'Escape closes suggestions');
+    await page.locator('#plantSearch').press('ArrowDown');
+    await page.locator('#plantSearch').press('Enter');
+    await page.locator('#water').selectOption('surface');
+    await page.locator('#drainage').selectOption('drained');
+    await page.locator('button[type=submit]').click();
+    check(await page.locator('#resultTitle').textContent() === 'Le verdict pour ton orchidée', 'feminine vowel possessive');
+    check(await page.locator('.score-label').textContent() === 'Potentiel de survie' && await page.locator('#verdictSummary .hint').textContent() === 'Estimation ludique selon tes réponses', 'game percentage clearly labelled');
+    check(await page.locator('button[type=submit]').evaluate(button => button === document.activeElement), 'calculation does not steal focus');
+    check(await page.locator('#resultNotice').isVisible() && (await page.locator('#resultAnnouncement').textContent()).includes('ton orchidée'), 'result link and live announcement');
+    await page.evaluate(() => localStorage.removeItem('plantHistory'));
     await page.evaluate(() => localStorage.setItem('plantHistory', JSON.stringify([
       { name: 'ZZ Plant', score: 80, date: '2025-01-01' },
       { plantId: 'zz', score: 100, kind: 'conditions-match', schemaVersion: 2 },
@@ -56,16 +95,15 @@ async function sorted(page) {
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
     check(await page.locator('#language').evaluate(button => { const r = button.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), 'language toggle available while scrolling');
     await page.locator('#language').click();
-    check(await sorted(page), 'English alphabetical order');
-    check(await page.locator('#plantSelect option').first().textContent() === 'African violet', 'English common name used for sorting');
+    check(await page.locator('#plantSearch').inputValue() === 'ZZ plant', 'selected common name translated');
     check(await page.locator('button[type=submit]').textContent() === 'Face the truth', 'original English button');
-    check(await page.locator('#plantSelect').inputValue() === 'zz' && await page.locator('#water').inputValue() === 'dry' && await page.locator('#light').inputValue() === 'indirect' && await page.locator('#drainage').inputValue() === 'drained', 'all choices preserved after sorting');
+    check(await page.evaluate(() => selectedPlantId) === 'zz' && await page.locator('#water').inputValue() === 'dry' && await page.locator('#light').inputValue() === 'indirect' && await page.locator('#drainage').inputValue() === 'drained', 'all choices preserved after sorting');
     check(await page.locator('.message').textContent() === 'Still green. Your plant approves.', 'result translated immediately');
     check(await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')).length) === 3, 'language switch does not calculate or add history');
     await calculate(page, { plant: 'aloe', water: 'surface', light: 'sun', expected: 80 });
-    check((await page.locator('.reason').textContent()).includes('−20') && (await page.locator('.reason').textContent()).includes('Let the mix dry out'), 'moderate watering problem explained');
+    check(!(await page.locator('.reason').textContent()).includes('−20') && (await page.locator('.reason').textContent()).includes('Let the mix dry out'), 'moderate watering problem explained');
     await calculate(page, { plant: 'aloe', water: 'moist', light: 'sun', expected: 60 });
-    check((await page.locator('.reason').textContent()).includes('−40'), 'opposite watering habit has larger impact');
+    check(!(await page.locator('.reason').textContent()).includes('−40'), 'penalties hidden; score still reflects impact');
     await calculate(page, { plant: 'zz', light: 'low', drainage: 'unknown', expected: 80 });
     check(await page.locator('.reason li').count() === 2, 'light tolerance and missing drainage information both explained');
     await page.locator('#language').click();
@@ -96,17 +134,23 @@ async function sorted(page) {
     await calculate(page);
     check(await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')).length) === 1, 'malformed history recovered');
 
-    await page.selectOption('#plantSelect', 'aloe');
+    await choosePlant(page, 'aloe');
     await page.evaluate(() => {
       Object.defineProperty(navigator, 'share', { configurable: true, writable: true, value: async data => { window.shared = data; } });
     });
     await page.locator('#shareBtn').click();
     const share = await page.evaluate(() => window.shared);
     check(share.text.includes('ZZ plant') && share.text.includes('100%') && !share.text.includes('Aloe'), 'share uses the calculated snapshot');
-    check(share.text.includes('has opinions') && share.text.includes('not survival odds'), 'English share is fun without a scientific probability claim');
+    check(share.text.includes('Survival potential') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
+    check(share.text.includes('https://nbzj4bq9sc-ship-it.github.io/Plants/'), 'share includes site link');
+    await page.locator('#water').selectOption('moist');
+    await page.locator('#light').selectOption('low');
+    await page.locator('#drainage').selectOption('wet');
+    await page.locator('#shareBtn').click();
+    check((await page.evaluate(() => window.shared.text)) === share.text, 'edited conditions do not alter shared snapshot');
     await page.locator('#language').click();
     await page.locator('#shareBtn').click();
-    check((await page.evaluate(() => window.shared.text)).includes('Plante ZZ : 100 %') && (await page.evaluate(() => window.shared.text)).includes('Ta plante approuve'), 'French share translated naturally');
+    check((await page.evaluate(() => window.shared.text)).includes('Plante ZZ · Potentiel de survie : 100 %') && (await page.evaluate(() => window.shared.text)).includes('Ta plante approuve'), 'French share translated naturally');
     await page.evaluate(() => {
       navigator.share = async () => { throw new DOMException('Canceled', 'AbortError'); };
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copied = text; } } });
@@ -123,16 +167,17 @@ async function sorted(page) {
     await page.locator('#shareBtn').click();
     check(await page.locator('#shareFallback').isVisible(), 'manual copy offered when clipboard is denied');
     await page.locator('#language').click();
-    check((await page.locator('#shareFallback').inputValue()).includes('My ZZ plant has opinions'), 'manual share text updates with language');
+    check((await page.locator('#shareFallback').inputValue()).includes('ZZ plant · Survival potential'), 'manual share text updates with language');
 
     for (const language of ['en', 'fr']) {
       if (await page.locator('html').getAttribute('lang') !== language) await page.locator('#language').click();
       for (const width of [320, 360, 390, 768, 1280]) {
         await page.setViewportSize({ width, height: 850 });
+        await page.locator('#plantSearch').fill('a');
         check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `no overflow ${language} ${width}`);
       }
       await page.setViewportSize({ width: 320, height: 720 });
-      check(await page.evaluate(() => [...document.querySelectorAll('button,select')].every(e => e.getBoundingClientRect().height >= 44)), 'touch targets');
+      check(await page.evaluate(() => [...document.querySelectorAll('button,select,input')].filter(e => e.getBoundingClientRect().height > 0).every(e => e.getBoundingClientRect().height >= 44)), 'touch targets');
       check(await page.evaluate(() => [...document.querySelectorAll('select')].every(select => {
         const canvas = document.createElement('canvas').getContext('2d');
         canvas.font = getComputedStyle(select).font;
@@ -155,10 +200,31 @@ async function sorted(page) {
     await page.screenshot({ path: '/tmp/plants-desktop.png', fullPage: true });
     await context.close();
 
+    const touch = await make({ locale: 'fr', hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+    await touch.page.goto(url);
+    await touch.page.locator('#plantSearch').tap();
+    await touch.page.locator('#plantSearch').fill('MOTH ORCHID');
+    await touch.page.locator('[data-plant-id=orchid]').tap();
+    check(await touch.page.evaluate(() => selectedPlantId) === 'orchid', 'touch selects English alias in French UI');
+    await touch.page.locator('#clearSearch').tap();
+    await touch.page.locator('#plantSearch').fill('Guzmania');
+    await touch.page.locator('[data-plant-id=bromeliad]').tap();
+    await touch.page.selectOption('#water', 'tank');
+    await touch.page.locator('#plantSearch').fill('Guz');
+    await touch.page.locator('#language').tap();
+    check(await touch.page.locator('#plantSearch').inputValue() === 'Guz' && await touch.page.locator('#water').inputValue() === 'tank', 'language preserves pending query and special watering answer');
+    await touch.page.locator('[data-plant-id=bromeliad]').tap();
+    await touch.page.selectOption('#light', 'indirect');
+    await touch.page.selectOption('#drainage', 'drained');
+    await touch.page.locator('button[type=submit]').tap();
+    check(await touch.page.locator('.score').textContent() === '100%' && await touch.page.locator('#resultNotice').isVisible(), 'touch calculation exposes result immediately with reduced motion');
+    check(await touch.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no touch viewport overflow');
+    await touch.context.close();
+
     const animated = await make({ locale: 'de-DE', reducedMotion: 'no-preference' });
     await animated.page.goto(url);
     check(await animated.page.locator('html').getAttribute('lang') === 'en', 'other browsers default to English');
-    await animated.page.selectOption('#plantSelect', 'zz');
+    await choosePlant(animated.page, 'zz');
     await animated.page.selectOption('#water', 'dry');
     await animated.page.selectOption('#light', 'indirect');
     await animated.page.selectOption('#drainage', 'drained');
@@ -169,6 +235,7 @@ async function sorted(page) {
     await animated.page.locator('#language').click();
     await animated.page.waitForFunction(() => parseInt(document.querySelector('.score').textContent) === 100);
     check((await animated.page.locator('.message').textContent()).includes('Ta plante approuve'), 'language changes during animation without losing verdict');
+    check((await animated.page.locator('#resultAnnouncement').textContent()).includes('Potentiel de survie'), 'accessible result translated immediately');
     await animated.page.locator('button[type=submit]').click();
     await animated.page.selectOption('#water', 'moist');
     await animated.page.locator('button[type=submit]').click();
@@ -190,6 +257,6 @@ async function sorted(page) {
     check(await blocked.page.locator('html').getAttribute('lang') === 'fr', 'storage denial does not break calculation or language');
     await blocked.context.close();
     check(errors.length === 0, `no browser errors: ${errors.join(', ')}`);
-    console.log(`PASS: ${checks} browser assertions; bilingual sorting, verdicts, all 69 houseplants, mobile, motion, share and history.`);
+    console.log(`PASS: ${checks} browser assertions; search, selection, FR/EN, all 69 plants, mobile, motion, share and history.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

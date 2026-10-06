@@ -7,6 +7,10 @@ let language = ['fr', 'en'].includes(savedLanguage) ? savedLanguage : (navigator
 let result = null;
 let animation = 0;
 let shareStatus = '';
+let selectedPlantId = null;
+let waterPlantId = null;
+let suggestions = [];
+let activeSuggestion = -1;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const t = key => translations[language][key];
 const format = (text, values) => text.replace(/\{(\w+)\}/g, (_, key) => values[key]);
@@ -15,15 +19,15 @@ const formatScore = score => `${score}${language === 'fr' ? ' %' : '%'}`;
 function renderResult() {
   if (!result) return;
   const plant = plants.find(item => item.id === result.plantId);
-  $('#resultTitle').textContent = format(t('resultTitle'), { plant: plant.name[language] });
+  $('#resultTitle').textContent = format(t('resultTitle'), { plant: possessivePlant(plant, language) });
   $('#accessibleScore').textContent = format(t('accessibleScore'), { score: result.score });
   $('.message').textContent = t('verdicts')[verdictIndex(result.score)];
   $('.score').textContent = formatScore(animation ? parseInt($('.score').textContent) || 0 : result.score);
   const advice = result.issues.map(issue => {
     const item = document.createElement('li');
-    item.textContent = `−${issue.points} · ${format(t('issues')[issue.type], {
+    item.textContent = format(t('issues')[issue.type], {
       water: t('careWater')[plant.water], light: t('careLight')[plant.light.ideal[0]],
-    })}`;
+    });
     return item;
   });
   if (!advice.length) {
@@ -34,11 +38,12 @@ function renderResult() {
   $('.reason').replaceChildren(...advice);
   $('.tip').textContent = plant.note[language];
   $('#source').href = plant.sourceUrl;
+  $('#resultAnnouncement').textContent = `${$('#resultTitle').textContent}. ${$('#accessibleScore').textContent} ${t('scoreHint')}. ${$('.message').textContent}`;
 }
 
 function renderWater(plant) {
   const previous = $('#water').value;
-  const choices = plant.water === 'tank' ? { dry: 'tankDry', tank: 'tank', moist: 'tankWet' } : { dry: 'dry', surface: 'surface', moist: 'moist' };
+  const choices = plant?.water === 'tank' ? { dry: 'tankDry', tank: 'tank', moist: 'tankWet' } : { dry: 'dry', surface: 'surface', moist: 'moist' };
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.disabled = true;
@@ -51,28 +56,122 @@ function renderWater(plant) {
   });
   $('#water').replaceChildren(placeholder, ...options);
   $('#water').value = Object.hasOwn(choices, previous) ? previous : '';
-  $('#waterHint').textContent = t(plant.water === 'tank' ? 'tankHint' : 'waterHint');
+  $('#waterHint').textContent = t(plant?.water === 'tank' ? 'tankHint' : 'waterHint');
 }
 
 function updatePlant() {
-  const plant = plants.find(item => item.id === $('#plantSelect').value);
-  $('#botanical').textContent = plant.botanical;
-  renderWater(plant);
+  const plant = plants.find(item => item.id === selectedPlantId);
+  $('#botanical').textContent = plant?.botanical || '';
+  renderWater(plant || plants.find(item => item.id === waterPlantId));
 }
+
+function closeSuggestions() {
+  $('#plantSuggestions').hidden = true;
+  $('#plantSearch').setAttribute('aria-expanded', 'false');
+  $('#plantSearch').removeAttribute('aria-activedescendant');
+  activeSuggestion = -1;
+}
+
+function renderSuggestions() {
+  suggestions = searchPlants(plants, $('#plantSearch').value, language);
+  activeSuggestion = -1;
+  $('#plantSearch').removeAttribute('aria-activedescendant');
+  const options = suggestions.map(plant => {
+    const option = document.createElement('li');
+    option.id = `suggestion-${plant.id}`;
+    option.dataset.plantId = plant.id;
+    option.setAttribute('role', 'option');
+    option.setAttribute('aria-selected', 'false');
+    const name = document.createElement('span');
+    name.textContent = plant.name[language];
+    const botanical = document.createElement('small');
+    botanical.textContent = plant.botanical;
+    option.append(name, botanical);
+    return option;
+  });
+  $('#plantSuggestions').replaceChildren(...options);
+  $('#plantSuggestions').hidden = !options.length;
+  $('#plantSearch').setAttribute('aria-expanded', String(!!options.length));
+  $('#searchStatus').textContent = options.length ? format(t('suggestionCount'), { count: options.length }) : t('noPlants');
+}
+
+function selectPlant(id) {
+  selectedPlantId = id;
+  waterPlantId = id;
+  $('#plantSearch').value = plants.find(plant => plant.id === id).name[language];
+  $('#plantSearch').setCustomValidity('');
+  $('#clearSearch').hidden = false;
+  $('#searchStatus').textContent = '';
+  updatePlant();
+  closeSuggestions();
+}
+
+$('#plantSearch').addEventListener('input', () => {
+  selectedPlantId = null;
+  $('#botanical').textContent = '';
+  $('#plantSearch').setCustomValidity(t('selectPlant'));
+  $('#clearSearch').hidden = !$('#plantSearch').value;
+  renderSuggestions();
+});
+$('#plantSearch').addEventListener('focus', () => { if (!selectedPlantId) renderSuggestions(); });
+$('#plantSearch').addEventListener('invalid', () => {
+  $('#searchStatus').textContent = suggestions.length || !$('#plantSearch').value ? t('selectPlant') : t('noPlants');
+});
+$('#plantSearch').addEventListener('keydown', event => {
+  if (event.key === 'Escape' || event.key === 'Tab') { closeSuggestions(); return; }
+  if (event.key === 'Enter' && !$('#plantSuggestions').hidden) {
+    event.preventDefault();
+    if (activeSuggestion >= 0) selectPlant(suggestions[activeSuggestion].id);
+    else $('#searchStatus').textContent = t('selectPlant');
+    return;
+  }
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+  if (['Home', 'End'].includes(event.key) && $('#plantSuggestions').hidden) return;
+  event.preventDefault();
+  if ($('#plantSuggestions').hidden) renderSuggestions();
+  if (!suggestions.length) return;
+  if (event.key === 'Home') activeSuggestion = 0;
+  else if (event.key === 'End') activeSuggestion = suggestions.length - 1;
+  else if (activeSuggestion < 0) activeSuggestion = event.key === 'ArrowDown' ? 0 : suggestions.length - 1;
+  else activeSuggestion = (activeSuggestion + (event.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length;
+  const options = [...$('#plantSuggestions').children];
+  options.forEach((option, index) => option.setAttribute('aria-selected', String(index === activeSuggestion)));
+  const option = options[activeSuggestion];
+  $('#plantSearch').setAttribute('aria-activedescendant', option.id);
+  option.scrollIntoView({ block: 'nearest' });
+});
+$('#plantSuggestions').addEventListener('mousedown', event => event.preventDefault());
+$('#plantSuggestions').addEventListener('click', event => {
+  const option = event.target.closest('[data-plant-id]');
+  if (!option) return;
+  selectPlant(option.dataset.plantId);
+  $('#plantSearch').focus({ preventScroll: true });
+});
+document.addEventListener('focusin', event => {
+  if (!event.target.closest('.plant-search')) closeSuggestions();
+});
+document.addEventListener('pointerdown', event => {
+  if (!event.target.closest('.plant-search')) closeSuggestions();
+});
+$('#clearSearch').addEventListener('click', () => {
+  selectedPlantId = null;
+  $('#plantSearch').value = '';
+  $('#plantSearch').setCustomValidity(t('selectPlant'));
+  $('#clearSearch').hidden = true;
+  updatePlant();
+  $('#plantSearch').focus({ preventScroll: true });
+  renderSuggestions();
+});
 
 function renderLanguage() {
   document.documentElement.lang = language;
   document.title = t('pageTitle');
   document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
-  const selection = $('#plantSelect').value || 'pothos';
-  const collator = new Intl.Collator(language, { sensitivity: 'base' });
-  $('#plantSelect').replaceChildren(...[...plants].sort((a, b) => collator.compare(a.name[language], b.name[language])).map(plant => {
-    const option = document.createElement('option');
-    option.value = plant.id;
-    option.textContent = plant.name[language];
-    return option;
-  }));
-  $('#plantSelect').value = selection;
+  $('#plantSearch').placeholder = t('searchPlaceholder');
+  $('#plantSearch').setCustomValidity(selectedPlantId ? '' : t('selectPlant'));
+  $('#clearSearch').setAttribute('aria-label', t('clearSearch'));
+  if (selectedPlantId) $('#plantSearch').value = plants.find(plant => plant.id === selectedPlantId).name[language];
+  else if ($('#plantSearch').value || document.activeElement === $('#plantSearch')) renderSuggestions();
   $('#language').textContent = language === 'fr' ? 'FR / EN' : 'EN / FR';
   $('#language').setAttribute('aria-label', t('language'));
   $('#shareFallback').setAttribute('aria-label', t('shareLabel'));
@@ -111,7 +210,12 @@ function animateScore() {
 
 $('#conditions').addEventListener('submit', event => {
   event.preventDefault();
-  const plant = plants.find(item => item.id === $('#plantSelect').value);
+  const plant = plants.find(item => item.id === selectedPlantId);
+  if (!plant) {
+    $('#plantSearch').setCustomValidity(t('selectPlant'));
+    $('#plantSearch').reportValidity();
+    return;
+  }
   const conditions = { water: $('#water').value, light: $('#light').value, drainage: $('#drainage').value };
   result = { plantId: plant.id, ...conditions, ...calculateScore(plant, conditions) };
   $('#result').hidden = false;
@@ -122,13 +226,14 @@ $('#conditions').addEventListener('submit', event => {
   renderResult();
   saveHistory();
   animateScore();
+  $('#resultNotice').hidden = false;
+  if (!reducedMotion.matches) $('#verdictSummary').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 $('#language').addEventListener('click', () => {
   language = language === 'fr' ? 'en' : 'fr';
   writeStorage('plantsLanguage', language);
   renderLanguage();
 });
-$('#plantSelect').addEventListener('change', updatePlant);
 reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) finishAnimation(); });
 
 function shareText() {

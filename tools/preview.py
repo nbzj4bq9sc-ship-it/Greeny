@@ -12,12 +12,12 @@ app = (root / 'index.html').read_text()
 app = app.replace('<link rel="stylesheet" href="style.css">', '<style>' + (root / 'style.css').read_text() + '</style>')
 app = re.sub(r'\s*<script src="[^"]+" defer></script>', '', app)
 app = app.replace('href="./"', 'href="#"')
-scripts = '\n'.join('<script>' + (root / name).read_text() + '</script>' for name in ('plants.js', 'translations.js', 'score.js', 'script.js'))
+scripts = '\n'.join('<script>' + (root / name).read_text() + '</script>' for name in ('plants.js', 'translations.js', 'score.js', 'search.js', 'script.js'))
 app = app.replace('</body>', scripts + '\n</body>')
 preview = '''<!doctype html>
 <html lang="fr">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Plants · Aperçu interactif de la PR #1</title>
+<title>Plants · Aperçu interactif</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#111a15;color:#f2efe5;font:16px system-ui,sans-serif}
 .toolbar{padding:16px;max-width:1100px;margin:auto}.toolbar p{font-size:14px;color:#bdc9be;line-height:1.5}
@@ -26,7 +26,7 @@ button[aria-pressed=true]{background:#c5dfb0;color:#19231f}button:focus-visible{
 .viewport{box-sizing:content-box;margin:auto;width:calc(100% - 2px);max-width:1100px;border:1px solid #46594c;border-radius:18px;overflow:hidden}
 iframe{display:block;border:0;width:100%;height:85vh;min-height:560px}.mobile{max-width:390px}.mobile.small{max-width:320px}
 </style>
-<div class="toolbar"><strong>Plants · Aperçu de la PR #1</strong>
+<div class="toolbar"><strong>Plants · Aperçu de la nouvelle version</strong>
 <div role="group" aria-label="Format de l’aperçu">
 <button id="desktop" aria-pressed="true">Ordinateur</button>
 <button id="mobile" aria-pressed="false">Mobile · 390 px</button>

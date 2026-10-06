@@ -34,18 +34,22 @@ body {
   top: 8px;
   z-index: 10;
   padding: 8px 0;
-  background: #19231ff2;
+  background: #24322bf2;
   border-radius: 16px;
   backdrop-filter: blur(10px);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
 }
 
 .brand {
-  font-weight: 750;
-  font-size: 24px;
+  grid-column: 2;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(40px, 10vw, 52px);
+  letter-spacing: -.045em;
+  line-height: 1.2;
   text-decoration: none;
   color: var(--green);
 }
@@ -72,7 +76,9 @@ button:disabled {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
-  min-width: 96px;
+  justify-self: end;
+  min-width: 76px;
+  padding: 10px;
   margin: 0;
 }
 
@@ -94,7 +100,7 @@ h1 {
 }
 
 h2 {
-  font-size: 18px;
+  font-size: 23px;
   font-weight: 550;
   margin: 0;
 }
@@ -122,7 +128,7 @@ label:first-child {
   margin-top: 0;
 }
 
-select {
+select, #plantSearch {
   width: 100%;
   min-width: 0;
   min-height: 52px;
@@ -165,7 +171,25 @@ button:hover {
   text-align: center;
   margin-top: 24px;
   animation: appear .3s ease-out;
+  scroll-margin-top: 90px;
 }
+
+#verdictSummary { scroll-margin-top: 100px; }
+.score-label { color: var(--green); margin: 16px 0 0; font-weight: 600; }
+.care-advice { border-top: 1px solid var(--border); margin-top: 28px; padding-top: 20px; text-align: left; }
+h3 { font-size: 18px; margin: 0; }
+.plant-search { position: relative; }
+.search-field { display: flex; align-items: center; position: relative; }
+#plantSearch { padding-right: 52px; }
+#clearSearch { position: absolute; right: 4px; top: 12px; padding: 0; width: 44px; min-height: 44px; background: transparent; color: var(--text); font-size: 24px; }
+#plantSuggestions { position: absolute; z-index: 5; top: 100%; left: 0; right: 0; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; padding: 6px; margin: 6px 0 0; list-style: none; background: #1c2922; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 28px #0006; }
+#plantSuggestions li { padding: 10px 12px; min-height: 52px; border-radius: 8px; cursor: pointer; overflow-wrap: anywhere; }
+#plantSuggestions li:hover, #plantSuggestions li[aria-selected=true] { background: var(--border); }
+#plantSuggestions span, #plantSuggestions small { display: block; }
+#plantSuggestions small { color: var(--muted); font-size: 12px; }
+#searchStatus:empty, #botanical:empty { display: none; }
+#searchStatus { color: var(--warm); }
+#resultNotice { text-align: center; }
 
 .score {
   font-size: 64px;
@@ -173,7 +197,7 @@ button:hover {
   font-weight: 750;
   color: var(--green);
   font-variant-numeric: tabular-nums;
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .emoji {
