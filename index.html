@@ -19,8 +19,9 @@
       <p id="botanical" class="hint"></p>
       <label for="water" data-i18n="water"></label><select id="water" name="water"><option value="dry" data-i18n="dry"></option><option value="surface" data-i18n="surface"></option><option value="moist" data-i18n="moist"></option></select>
       <p class="hint" data-i18n="waterHint"></p>
-      <label for="light" data-i18n="light"></label><select id="light" name="light"><option value="low" data-i18n="low"></option><option value="indirect" data-i18n="indirect"></option><option value="sun" data-i18n="sun"></option></select>
-      <div class="temperature-label"><label for="temperature" data-i18n="temperature"></label><output id="tempValue" for="temperature">22 °C</output></div>
+      <label for="light" data-i18n="light"></label><select id="light" name="light" aria-describedby="lightHint"><option value="low" data-i18n="low"></option><option value="indirect" data-i18n="indirect"></option><option value="sun" data-i18n="sun"></option></select>
+      <p id="lightHint" class="hint" data-i18n="lightHint"></p>
+    <div class="temperature-label"><label for="temperature" data-i18n="temperature"></label><output id="tempValue" for="temperature">22 °C</output></div>
       <input type="range" min="10" max="35" value="22" id="temperature" name="temperature" aria-describedby="temperatureHint">
       <p id="temperatureHint" class="hint" data-i18n="temperatureHint"></p>
       <button class="primary" type="submit" data-i18n="calculate"></button>

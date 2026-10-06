@@ -2,9 +2,9 @@ const translations = {
   en: {
     pageTitle: 'Plants · A little care goes a long way', language: 'Change language to French',
     eyebrow: 'A little care goes a long way', title: 'How does your plant feel?', subtitle: 'One plant, your conditions, a few gentle pointers.',
-    plant: 'Your plant', water: 'When do you water?', dry: 'Once the potting mix has dried out', surface: 'Once the surface has dried', moist: 'Keep the potting mix lightly moist',
+    plant: 'Your plant', water: 'When do you water?', dry: 'Growing medium fully dry', surface: 'Surface dry', moist: 'Kept lightly moist',
     waterHint: 'Check the potting mix rather than counting days. Never leave the pot standing in water.',
-    light: 'Light at its spot', low: 'Low light', indirect: 'Bright, indirect light', sun: 'Direct sunshine', temperature: 'Ambient temperature',
+    light: 'Light at its spot', low: 'Low light', indirect: 'Bright, indirect light', sun: 'Direct sunshine', lightHint: 'Indirect light means a bright spot out of direct sun.', temperature: 'Ambient temperature',
     temperatureHint: 'Temperature is context only: it is not included in the score. Needs vary with species and season.',
     calculate: 'See how it fits', resultTitle: 'Your conditions match', scoreHint: 'A playful score based on watering and light, not a survival probability.',
     messages: ['Time for a few adjustments.', 'Some care adjustments could help.', 'A good starting point.', 'Your conditions fit this broad profile.'],
@@ -22,9 +22,9 @@ const translations = {
   fr: {
     pageTitle: 'Plants · Un peu de soin, beaucoup de vert', language: 'Passer en anglais',
     eyebrow: 'Un peu de soin, beaucoup de vert', title: 'Comment va votre plante ?', subtitle: 'Une plante, vos conditions, quelques conseils tout en douceur.',
-    plant: 'Votre plante', water: 'Quand arrosez-vous ?', dry: 'Quand le terreau a séché en profondeur', surface: 'Quand la surface du terreau a séché', moist: 'Je garde le terreau légèrement humide',
+    plant: 'Votre plante', water: 'Quand arrosez-vous ?', dry: 'Substrat sec en profondeur', surface: 'Surface du substrat sèche', moist: 'Substrat légèrement humide',
     waterHint: 'Vérifiez le terreau plutôt que de compter les jours. Ne laissez jamais le pot dans une eau stagnante.',
-    light: 'La lumière à son emplacement', low: 'Peu de lumière', indirect: 'Lumière vive, sans soleil direct', sun: 'Soleil direct', temperature: 'Température ambiante',
+    light: 'La lumière à son emplacement', low: 'Peu de lumière', indirect: 'Lumière vive indirecte', sun: 'Soleil direct', lightHint: 'Une lumière indirecte est une lumière vive, sans soleil direct.', temperature: 'Température ambiante',
     temperatureHint: 'La température sert de contexte : elle ne compte pas dans le score. Les besoins varient selon l’espèce et la saison.',
     calculate: 'Découvrir mon résultat', resultTitle: 'L’adéquation de vos conditions', scoreHint: 'Un score ludique basé sur l’arrosage et la lumière, pas une probabilité de survie.',
     messages: ['Quelques ajustements à prévoir.', 'Quelques changements pourraient aider.', 'Un bon point de départ.', 'Vos conditions correspondent à ce profil général.'],

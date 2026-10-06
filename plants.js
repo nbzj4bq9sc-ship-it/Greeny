@@ -154,7 +154,7 @@ const plants = [
     "id": "philodendron",
     "name": {
       "en": "Heartleaf philodendron",
-      "fr": "Philodendron à feuilles en cœur"
+      "fr": "Philodendron grimpant"
     },
     "botanical": "Philodendron hederaceum",
     "water": "surface",
