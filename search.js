@@ -7,14 +7,13 @@ function normalizeSearch(value) {
 
 function searchPlants(catalogue, query, language) {
   const terms = normalizeSearch(query).split(' ').filter(Boolean);
-  if (!terms.length) return ['monstera', 'pothos', 'orchid', 'cactus', 'snake', 'zz']
-    .map(id => catalogue.find(plant => plant.id === id)).filter(Boolean);
+  const collator = new Intl.Collator(language, { sensitivity: 'base' });
+  if (!terms.length) return [...catalogue].sort((a, b) => collator.compare(a.name[language], b.name[language]));
   const matches = catalogue.map(plant => {
     const names = [plant.name[language], plant.name[language === 'fr' ? 'en' : 'fr'], plant.botanical, ...(plant.aliases || [])];
     const rank = names.findIndex(name => terms.every(term => normalizeSearch(name).includes(term)));
     return { plant, rank };
   }).filter(item => item.rank >= 0);
-  const collator = new Intl.Collator(language, { sensitivity: 'base' });
   return matches.sort((a, b) => a.rank - b.rank || collator.compare(a.plant.name[language], b.plant.name[language]))
     .map(item => item.plant);
 }

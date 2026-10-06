@@ -31,7 +31,7 @@ async function choosePlant(page, id) {
     const { context, page } = await make({ locale: 'fr-CA', viewport: { width: 320, height: 720 }, reducedMotion: 'reduce' });
     await page.goto(url);
     check(await page.locator('html').getAttribute('lang') === 'fr', 'French detected on first visit');
-    check(await page.evaluate(() => plants.length) === 69, 'catalogue unchanged');
+    check(await page.evaluate(() => plants.length) === 75, '69 original profiles and six verified additions');
     check(await page.locator('button[type=submit]').textContent() === 'Affronte la vérité', 'French button and informal tone');
     check(await page.locator('#temperature').count() === 0, 'decorative temperature slider removed');
     check((await page.locator('#plantSearch').inputValue()) === '', 'no plant selected implicitly');
@@ -40,6 +40,31 @@ async function choosePlant(page, id) {
     for (const asset of ['plants.js', 'translations.js', 'score.js', 'search.js', 'script.js', 'style.css']) {
       check((await page.request.get(new URL(asset, url).href)).status() === 200, `${asset} served`);
     }
+    check(await page.locator('h1').textContent() === 'Greeny' && (await page.title()).startsWith('Greeny ·'), 'Greeny identity and page title');
+    check(await page.locator('.intro').textContent() === 'Dis-nous comment ça se passe vraiment. Ta plante encaissera. Enfin… peut-être.', 'one exact French introduction');
+    check(await page.locator('#plantSearch').getAttribute('placeholder') === 'Cherche ta plante…', 'French placeholder');
+    await page.locator('#plantSearch').click();
+    check(await page.locator('[role=option]').count() === 75, 'empty click opens every plant');
+    await page.locator('#plantSearch').press('Escape');
+    await page.locator('#plantSearch').click();
+    check(await page.locator('#plantSuggestions').isVisible(), 'empty click reopens catalogue after Escape');
+    for (const lang of ['fr', 'en']) {
+      if (await page.locator('html').getAttribute('lang') !== lang) await page.locator('#language').click();
+      await page.locator('#plantSearch').click();
+      const names = await page.locator('[role=option] span').allTextContents();
+      check(JSON.stringify(names) === JSON.stringify([...names].sort(new Intl.Collator(lang, { sensitivity: 'base' }).compare)), `complete catalogue sorted ${lang}`);
+      check(await page.locator('#plantSuggestions').evaluate(panel => panel.clientHeight <= 260 && panel.scrollHeight > panel.clientHeight), 'bounded scrolling catalogue');
+      check(!(await page.locator('#searchStatus').textContent()).includes(lang === 'fr' ? 'flèches' : 'arrow'), 'keyboard instructions absent from visible status');
+      await page.locator('#plantSearch').press('End');
+      check(await page.locator('[aria-selected=true][role=option]').evaluate(option => {
+        const r = option.getBoundingClientRect(), p = option.parentElement.getBoundingClientRect();
+        return r.top >= p.top && r.bottom <= p.bottom;
+      }), 'last keyboard option scrolls into panel');
+      await page.locator('#plantSearch').press('Enter');
+      check(await page.locator('#plantSuggestions').isHidden(), 'full catalogue keyboard selection');
+      await page.locator('#clearSearch').click();
+    }
+    await page.locator('#language').click();
     await page.locator('#plantSearch').fill('SANSEVIERIA');
     check(await page.locator('[role=option]').first().textContent() === 'Langue de belle-mèreDracaena trifasciata', 'synonym search and French common name first');
     await page.locator('#plantSearch').press('ArrowDown');
@@ -62,7 +87,7 @@ async function choosePlant(page, id) {
     await page.locator('#language').click();
     await page.locator('#clearSearch').click();
     check(await page.locator('#plantSearch').inputValue() === '' && await page.evaluate(() => selectedPlantId) === null, 'clear removes selection');
-    check(await page.locator('[role=option]').count() === 6, 'short starter suggestions');
+    check(await page.locator('[role=option]').count() === 75, 'complete catalogue on empty search');
     await page.locator('#plantSearch').fill('plante intergalactique');
     check((await page.locator('#searchStatus').textContent()).includes('Aucune plante') && await page.locator('[role=option]').count() === 0, 'no-match message');
     await page.locator('#water').selectOption('dry');
@@ -101,11 +126,11 @@ async function choosePlant(page, id) {
     check(await page.locator('.message').textContent() === 'Still green. Your plant approves.', 'result translated immediately');
     check(await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')).length) === 3, 'language switch does not calculate or add history');
     await calculate(page, { plant: 'aloe', water: 'surface', light: 'sun', expected: 80 });
-    check(!(await page.locator('.reason').textContent()).includes('−20') && (await page.locator('.reason').textContent()).includes('Let the mix dry out'), 'moderate watering problem explained');
+    check(!(await page.locator('.reason').textContent()).includes('−20') && (await page.locator('.reason').textContent()).includes('Let the soil dry'), 'moderate watering problem explained');
     await calculate(page, { plant: 'aloe', water: 'moist', light: 'sun', expected: 60 });
     check(!(await page.locator('.reason').textContent()).includes('−40'), 'penalties hidden; score still reflects impact');
     await calculate(page, { plant: 'zz', light: 'low', drainage: 'unknown', expected: 80 });
-    check(await page.locator('.reason li').count() === 2, 'light tolerance and missing drainage information both explained');
+    check(await page.locator('.reason li').count() === 3, 'light, drainage and the watering routine each appear once');
     await page.locator('#language').click();
     check((await page.locator('.reason').textContent()).includes('Elle tolère cette lumière') && (await page.locator('.reason').textContent()).includes('Vérifie les trous'), 'diagnosis translated after imperfect result');
     check(parseInt(await page.locator('.score').textContent()) === 80, 'score retained on language switch');
@@ -113,7 +138,7 @@ async function choosePlant(page, id) {
     await calculate(page, { drainage: 'wet', expected: 70 });
     check((await page.locator('.reason').textContent()).includes('Standing water'), 'drainage affects score and advice');
     await calculate(page, { plant: 'schlumbergera', water: 'dry', light: 'sun', expected: 20 });
-    check((await page.locator('.tip').textContent()).includes('bleach the stems'), 'forest cactus advice differs from desert cactus');
+    check((await page.locator('.reason').textContent()).includes('bleach the stems'), 'forest cactus advice differs from desert cactus');
     await calculate(page, { plant: 'aloe', water: 'dry', light: 'indirect', expected: 80 });
     check((await page.locator('.reason').textContent()).includes('Try a different light'), 'moderate light mismatch rendered');
     await calculate(page, { plant: 'yucca', water: 'dry', light: 'sun', expected: 90 });
@@ -141,7 +166,7 @@ async function choosePlant(page, id) {
     await page.locator('#shareBtn').click();
     const share = await page.evaluate(() => window.shared);
     check(share.text.includes('ZZ plant') && share.text.includes('100%') && !share.text.includes('Aloe'), 'share uses the calculated snapshot');
-    check(share.text.includes('Survival potential') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
+    check(share.title.startsWith('Greeny ·') && share.text.startsWith('🌱 Greeny ·') && share.text.includes('Survival potential') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
     check(share.text.includes('https://nbzj4bq9sc-ship-it.github.io/Plants/'), 'share includes site link');
     await page.locator('#water').selectOption('moist');
     await page.locator('#light').selectOption('low');
@@ -186,9 +211,15 @@ async function choosePlant(page, id) {
       check(await page.evaluate(() => [...document.querySelectorAll('[data-i18n]')].every(e => e.textContent && !e.textContent.includes('undefined'))), 'all interface text translated');
     }
     const catalog = await page.evaluate(() => plants);
-    for (const plant of catalog) {
-      await calculate(page, { plant: plant.id, water: plant.water, light: plant.light.ideal[0] });
-      check(await page.locator('#source').getAttribute('href') === plant.sourceUrl && (await page.locator('.tip').textContent()) === plant.note.fr, `${plant.id} selectable with its own advice and reference`);
+    for (const lang of ['en', 'fr']) {
+      if (await page.locator('html').getAttribute('lang') !== lang) await page.locator('#language').click();
+      for (const plant of catalog) {
+        await calculate(page, { plant: plant.id, water: plant.water, light: plant.light.ideal[0] });
+        check(await page.locator('#source').getAttribute('href') === plant.sourceUrl && await page.locator('.reason li[data-topic=water]').count() === 1 && await page.locator('.reason li[data-topic=light]').count() === 1, `${plant.id} selectable with unique advice and reference in ${lang}`);
+      }
+      await calculate(page, { plant: 'aloe', water: 'moist', light: 'low', drainage: 'wet', expected: 0 });
+      const care = await page.locator('.reason').textContent();
+      check(await page.locator('.tip').count() === 0 && await page.locator('.reason li').count() === 3 && (care.match(lang === 'fr' ? /sécher/g : /dry/g) || []).length === 1 && (care.match(lang === 'fr' ? /soucoupe/g : /saucer/g) || []).length === 1, `combined problems rendered once in ${lang}`);
     }
     await calculate(page, { plant: 'aloe', water: 'moist', light: 'low', drainage: 'wet', expected: 0 });
     check(await page.locator('.reason li').count() === 3 && (await page.locator('.message').textContent()).includes('évasion'), 'combined problems produce a playful low verdict with concrete advice');
@@ -203,6 +234,12 @@ async function choosePlant(page, id) {
     const touch = await make({ locale: 'fr', hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
     await touch.page.goto(url);
     await touch.page.locator('#plantSearch').tap();
+    check(await touch.page.locator('[role=option]').count() === 75, 'touch opens full catalogue');
+    await touch.page.locator('#plantSuggestions').evaluate(panel => { panel.scrollTop = panel.scrollHeight; });
+    const lastId = await touch.page.locator('[role=option]').last().getAttribute('data-plant-id');
+    await touch.page.locator('[role=option]').last().tap();
+    check(await touch.page.evaluate(() => selectedPlantId) === lastId, 'touch selects last entry in scrolling catalogue');
+    await touch.page.locator('#clearSearch').tap();
     await touch.page.locator('#plantSearch').fill('MOTH ORCHID');
     await touch.page.locator('[data-plant-id=orchid]').tap();
     check(await touch.page.evaluate(() => selectedPlantId) === 'orchid', 'touch selects English alias in French UI');
@@ -257,6 +294,6 @@ async function choosePlant(page, id) {
     check(await blocked.page.locator('html').getAttribute('lang') === 'fr', 'storage denial does not break calculation or language');
     await blocked.context.close();
     check(errors.length === 0, `no browser errors: ${errors.join(', ')}`);
-    console.log(`PASS: ${checks} browser assertions; search, selection, FR/EN, all 69 plants, mobile, motion, share and history.`);
+    console.log(`PASS: ${checks} browser assertions; search, selection, FR/EN, all 75 plants, mobile, motion, share and history.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

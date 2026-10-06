@@ -28,7 +28,7 @@ test('source-backed profiles fit the available answers without contradictory lig
     const light = [...plant.light.ideal, ...plant.light.tolerated, ...plant.light.avoid];
     assert.equal(new Set(light).size, light.length, plant.id);
     assert.ok(light.every(value => ['low', 'indirect', 'partial', 'sun'].includes(value)), plant.id);
-    assert.ok(plant.note.fr && plant.note.en, plant.id);
+    for (const tip of Object.values(plant.care || {})) assert.ok(tip.fr && tip.en, plant.id);
     assert.match(plant.sourceUrl, /^https:\/\/plants\.ces\.ncsu\.edu\/plants\/[^/]+\/$/, plant.id);
     assert.ok(!('temperature' in plant), 'no invented temperature target');
   }
