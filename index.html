@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>Plants · Will your plant survive?</title>
-  <link rel="stylesheet" href="style.css?v=d0642b0709e1c3b9">
-  <script src="plants.js?v=a89889db6e1f90e2" defer></script>
-  <script src="translations.js?v=4a4a964a02c0ce9e" defer></script>
-  <script src="score.js?v=7d8ff41556543bf9" defer></script>
-  <script src="search.js?v=a5f895c668de664d" defer></script>
-  <script src="script.js?v=141be07f3cd698f9" defer></script>
+  <title>Greeny · Will your plant survive?</title>
+  <link rel="stylesheet" href="style.css?v=e6e500e674109f89">
+  <script src="plants.js?v=fe8d8d6168b938dc" defer></script>
+  <script src="translations.js?v=069f80a0eb57aab2" defer></script>
+  <script src="score.js?v=9ff19949a16ffba3" defer></script>
+  <script src="search.js?v=4aa11357ff14032f" defer></script>
+  <script src="script.js?v=5e8426334d3b6911" defer></script>
 </head>
 <body>
   <main class="app">
-    <header class="topbar"><a class="brand" href="./" aria-label="Plants">Plants</a><button id="language" class="language" type="button">FR / EN</button></header>
-    <section class="intro"><p class="eyebrow" data-i18n="eyebrow"></p><h1 data-i18n="title"></h1><p class="subtitle" data-i18n="subtitle"></p></section>
+    <header class="topbar"><h1 class="brand"><a href="./">Greeny</a></h1><button id="language" class="language" type="button">FR / EN</button></header>
+    <section class="intro"><p class="subtitle" data-i18n="subtitle"></p></section>
     <form id="conditions" class="card">
       <label id="plantLabel" for="plantSearch" data-i18n="plant"></label>
       <div class="plant-search">
@@ -25,7 +25,7 @@
         </div>
         <ul id="plantSuggestions" role="listbox" aria-labelledby="plantLabel" hidden></ul>
       </div>
-      <p id="searchHint" class="hint" data-i18n="searchHint"></p>
+      <p id="searchHint" class="sr-only" data-i18n="searchHint"></p>
       <p id="botanical" class="hint"></p>
       <p id="searchStatus" class="hint" role="status"></p>
       <label for="water" data-i18n="water"></label><select id="water" name="water" required aria-describedby="waterHint"></select>
@@ -49,7 +49,7 @@
       <button id="shareBtn" type="button" class="share-btn" data-i18n="share"></button>
       <p id="shareStatus" role="status"></p>
       <textarea id="shareFallback" readonly hidden aria-label="Share text"></textarea>
-      <div class="care-advice"><h3 data-i18n="adviceTitle"></h3><ul class="reason"></ul><p class="tip"></p>
+      <div class="care-advice"><h3 data-i18n="adviceTitle"></h3><ul class="reason"></ul>
       <a id="source" target="_blank" rel="noopener noreferrer" data-i18n="source"></a></div>
     </section>
     <p id="resultAnnouncement" class="sr-only" role="status" aria-atomic="true"></p>

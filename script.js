@@ -23,20 +23,13 @@ function renderResult() {
   $('#accessibleScore').textContent = format(t('accessibleScore'), { score: result.score });
   $('.message').textContent = t('verdicts')[verdictIndex(result.score)];
   $('.score').textContent = formatScore(animation ? parseInt($('.score').textContent) || 0 : result.score);
-  const advice = result.issues.map(issue => {
+  const advice = buildAdvice(plant, result.issues, language).map(({ topic, text }) => {
     const item = document.createElement('li');
-    item.textContent = format(t('issues')[issue.type], {
-      water: t('careWater')[plant.water], light: t('careLight')[plant.light.ideal[0]],
-    });
+    item.dataset.topic = topic;
+    item.textContent = text;
     return item;
   });
-  if (!advice.length) {
-    const item = document.createElement('li');
-    item.textContent = t('matched');
-    advice.push(item);
-  }
   $('.reason').replaceChildren(...advice);
-  $('.tip').textContent = plant.note[language];
   $('#source').href = plant.sourceUrl;
   $('#resultAnnouncement').textContent = `${$('#resultTitle').textContent}. ${$('#accessibleScore').textContent} ${t('scoreHint')}. ${$('.message').textContent}`;
 }
@@ -114,6 +107,9 @@ $('#plantSearch').addEventListener('input', () => {
   renderSuggestions();
 });
 $('#plantSearch').addEventListener('focus', () => { if (!selectedPlantId) renderSuggestions(); });
+$('#plantSearch').addEventListener('click', () => {
+  if (!selectedPlantId && $('#plantSuggestions').hidden) renderSuggestions();
+});
 $('#plantSearch').addEventListener('invalid', () => {
   $('#searchStatus').textContent = suggestions.length || !$('#plantSearch').value ? t('selectPlant') : t('noPlants');
 });

@@ -1,6 +1,6 @@
-# Plants
+# Greeny
 
-Would your plant survive your actual routine? A small, playful bilingual app: pick one of 69 houseplants, describe watering, light and drainage, face the animated verdict, get practical care tips and share it. The warm dark design stays responsive. No framework or application build step.
+Would your plant survive your actual routine? A small, playful bilingual app: pick one of 75 houseplants, describe watering, light and drainage, face the animated verdict, get practical care tips and share it. The warm dark design stays responsive. No framework or application build step.
 
 ## Develop
 
@@ -9,7 +9,7 @@ cd /workspace/Plants
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-No API keys, package installation or backend are needed. `plants.js` holds the sourced catalogue, search aliases and French genders; `translations.js` holds UI copy; `score.js` calculates the unchanged game score; `search.js` handles matching and possessives; `script.js` handles rendering and interactions. Styles are in `style.css`.
+No API keys, package installation or backend are needed. `plants.js` holds the sourced catalogue, topic-specific care, search aliases and French genders; `translations.js` holds UI copy; `score.js` calculates the unchanged game score and assembles one care entry per topic; `search.js` handles matching and possessives; `script.js` handles rendering and interactions. Styles are in `style.css`.
 
 ## Verify
 
@@ -26,11 +26,12 @@ node --check search.js
 node --check script.js
 node --test tests/score.test.cjs
 node --test tests/search.test.cjs
+node --test tests/advice.test.cjs
 node tests/browser.cjs
 node --test tests/cache.test.cjs
 ```
 
-The score tests cover the existing calculation and coarse bounds across every valid combination. Search tests cover FR/EN common names, botanical names, aliases, accent and case handling, no matches and French possessives. Browser tests cover explicit selection, keyboard and touch suggestions, preserved answers and translated verdicts, all 69 plants, mobile widths, reduced motion, sharing the last calculated result, copy fallbacks, legacy history and unavailable storage. The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. Native sharing is mocked; the operating system's share sheet still needs a real-device check.
+The score tests cover the existing calculation and coarse bounds across every valid combination. Search tests cover FR/EN common names, botanical names, aliases, accent and case handling, no matches and French possessives. Browser tests cover explicit selection, keyboard and touch suggestions, preserved answers and translated verdicts, all 75 plants, mobile widths, reduced motion, sharing the last calculated result, copy fallbacks, legacy history and unavailable storage. The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. Native sharing is mocked; the operating system's share sheet still needs a real-device check.
 
 To generate a self-contained interactive review file outside the checkout:
 
@@ -40,4 +41,6 @@ python3 tools/preview.py /workspace/previews/plants.html
 
 Open the downloaded HTML in a browser. Its desktop, 390px and 320px controls resize the app without resetting it. Native sharing and clipboard access depend on browser permissions and may require HTTPS; manual copying remains available.
 
-See [SOURCES.md](SOURCES.md) for the 69 references, botanical scope, catalogue exclusions, scoring rules and why the nonfunctional temperature input was removed. The score is a game, not a scientific survival probability.
+See [SOURCES.md](SOURCES.md) for the 75 references, botanical scope, catalogue exclusions, scoring rules and why the nonfunctional temperature input was removed. The score is a game, not a scientific survival probability.
+
+Greeny retains the Plants repository and the existing GitHub Pages URL. Empty searches show the full catalogue sorted by the active language; filtering also searches synonyms and botanical names. Care advice combines each diagnosis with its action, preserves seasonal instructions, and adds general guidance only once per topic.

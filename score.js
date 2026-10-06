@@ -31,4 +31,21 @@ function verdictIndex(score) {
   return score >= 90 ? 4 : score >= 70 ? 3 : score >= 50 ? 2 : score >= 30 ? 1 : 0;
 }
 
-if (typeof module !== 'undefined') module.exports = { calculateScore, verdictIndex };
+// One entry per care topic: a diagnosis and its plant-specific action stay together.
+function buildAdvice(plant, issues, language) {
+  const copy = translations[language];
+  const water = plant.care?.water?.[language] || copy.careWater[plant.water];
+  const light = plant.care?.light?.[language] || copy.lightAdvice.replace('{light}',
+    plant.light.ideal.map(value => copy.careLight[value]).join(copy.lightOr));
+  const entries = issues.map(issue => ({
+    topic: issue.type.startsWith('light') ? 'light' : issue.type.startsWith('drainage') ? 'drainage' : 'water',
+    text: copy.issues[issue.type].replace('{water}', water).replace('{light}', light),
+  }));
+  for (const [topic, text] of Object.entries({ water, light })) {
+    if (!entries.some(entry => entry.topic === topic)) entries.push({ topic, text });
+  }
+  if (plant.care?.extra) entries.push({ topic: 'extra', text: plant.care.extra[language] });
+  return entries;
+}
+
+if (typeof module !== 'undefined') module.exports = { calculateScore, verdictIndex, buildAdvice };

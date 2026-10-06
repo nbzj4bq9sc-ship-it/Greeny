@@ -22,15 +22,20 @@ test('both common names, botanical names and every recorded alias find the same 
   assert.equal(normalizeSearch('Chaîne des CŒURS'), 'chaine des coeurs');
 });
 
-test('unknown text produces no profile and empty search offers a short starting list', () => {
+test('unknown text produces no profile and empty search offers the complete alphabetized catalogue', () => {
   assert.deepEqual(searchPlants(plants, 'intergalactic unicorn', 'fr'), []);
-  assert.equal(searchPlants(plants, '   ', 'en').length, 6);
+  for (const language of ['fr', 'en']) {
+    const all = searchPlants(plants, '   ', language);
+    assert.equal(all.length, plants.length);
+    assert.deepEqual(all.map(p => p.name[language]), plants.map(p => p.name[language]).sort(new Intl.Collator(language, { sensitivity: 'base' }).compare));
+    assert.notEqual(all, plants);
+  }
   assert.equal(searchPlants(plants, 'cactus', 'fr')[0].id, 'cactus');
   assert.equal(searchPlants(plants, 'Zebra plant', 'en')[0].id, 'aphelandra');
 });
 
 test('French possessives cover gender, vowels, accents and all catalogue entries', () => {
-  const feminine = new Set('spider peace snake zz fern violet orchid monstera echeveria hoya alocasia aspidistra cordyline tradescantia adiantum davallia platycerium sedum ceropegia nematanthus'.split(' '));
+  const feminine = new Set('spider peace snake zz fern violet orchid monstera echeveria hoya alocasia aspidistra cordyline tradescantia asplenium adiantum davallia platycerium sedum ceropegia nematanthus'.split(' '));
   for (const plant of plants) {
     assert.equal(plant.genderFr, feminine.has(plant.id) ? 'f' : 'm', plant.id);
     const expected = feminine.has(plant.id) && !/^[aeiouyh]/.test(normalizeSearch(plant.name.fr)) ? 'ta ' : 'ton ';
