@@ -14,6 +14,11 @@ let activeSuggestion = -1;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const t = key => translations[language][key];
 const format = (text, values) => text.replace(/\{(\w+)\}/g, (_, key) => values[key]);
+const publicUrl = 'https://nbzj4bq9sc-ship-it.github.io/Plants/';
+const rankedIssues = snapshot => [...snapshot.issues].sort((a, b) => b.points - a.points);
+function verdictText() {
+  return `${t('verdictVariants')[verdictIndex(result.score)][result.variant]} ${t('jokes')[rankedIssues(result)[0]?.type || 'matched']}`;
+}
 const formatScore = score => `${score}${language === 'fr' ? ' %' : '%'}`;
 
 function renderResult() {
@@ -21,9 +26,16 @@ function renderResult() {
   const plant = plants.find(item => item.id === result.plantId);
   $('#resultTitle').textContent = format(t('resultTitle'), { plant: possessivePlant(plant, language) });
   $('#accessibleScore').textContent = format(t('accessibleScore'), { score: result.score });
-  $('.message').textContent = t('verdicts')[verdictIndex(result.score)];
+  $('#result').dataset.level = result.score >= 70 ? 'good' : result.score >= 50 ? 'mixed' : 'poor';
+  $('#resultLevel').textContent = t('levels')[verdictIndex(result.score)];
+  $('.message').textContent = verdictText();
   $('.score').textContent = formatScore(animation ? parseInt($('.score').textContent) || 0 : result.score);
-  const advice = buildAdvice(plant, result.issues, language).map(({ topic, text }) => {
+  const [priority, ...remaining] = buildAdvice(plant, rankedIssues(result), language);
+  $('#priorityTitle').textContent = t(result.issues.length ? 'priorityTitle' : 'maintenanceTitle');
+  $('#priorityAction').textContent = priority.text;
+  $('#priorityAction').dataset.topic = priority.topic;
+  $('#otherAdviceTitle').hidden = !remaining.length;
+  const advice = remaining.map(({ topic, text }) => {
     const item = document.createElement('li');
     item.dataset.topic = topic;
     item.textContent = text;
@@ -214,8 +226,11 @@ $('#conditions').addEventListener('submit', event => {
   }
   const conditions = { water: $('#water').value, light: $('#light').value, drainage: $('#drainage').value };
   result = { plantId: plant.id, ...conditions, ...calculateScore(plant, conditions) };
+  // Stable across language switches and repeated calculations of the same answers.
+  result.variant = [...`${plant.id}:${conditions.water}:${conditions.light}:${conditions.drainage}`]
+    .reduce((sum, character) => sum + character.charCodeAt(0), 0) % 2;
   $('#result').hidden = false;
-  $('.emoji').textContent = result.score >= 70 ? '🌿' : result.score >= 40 ? '🌱' : '🪴';
+  $('.emoji').textContent = result.score >= 70 ? '🌿' : result.score >= 50 ? '🌱' : '🪴';
   shareStatus = '';
   $('#shareStatus').textContent = '';
   $('#shareFallback').hidden = true;
@@ -234,7 +249,7 @@ reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) fini
 
 function shareText() {
   const plant = plants.find(item => item.id === result.plantId);
-  return `${format(t('shareText'), { plant: plant.name[language], score: result.score, verdict: t('verdicts')[verdictIndex(result.score)] })}\nhttps://nbzj4bq9sc-ship-it.github.io/Plants/`;
+  return `${format(t('shareText'), { plant: plant.name[language], score: result.score, verdict: verdictText() })}\n${publicUrl}`;
 }
 $('#shareBtn').addEventListener('click', async () => {
   if (!result) return;
@@ -246,7 +261,7 @@ $('#shareBtn').addEventListener('click', async () => {
   try {
     if (navigator.share) {
       try {
-        await navigator.share({ title: t('pageTitle'), text });
+        await navigator.share({ title: t('pageTitle'), text: text.replace(`\n${publicUrl}`, ''), url: publicUrl });
         shareStatus = 'shared';
         return;
       } catch (error) {

@@ -104,7 +104,7 @@ async function choosePlant(page, id) {
     await page.locator('#drainage').selectOption('drained');
     await page.locator('button[type=submit]').click();
     check(await page.locator('#resultTitle').textContent() === 'Le verdict pour ton orchidée', 'feminine vowel possessive');
-    check(await page.locator('.score-label').textContent() === 'Potentiel de survie' && await page.locator('#verdictSummary .hint').textContent() === 'Estimation ludique selon tes réponses', 'game percentage clearly labelled');
+    check(await page.locator('.score-label').textContent() === 'Potentiel de survie' && await page.locator('#verdictSummary .hint').textContent() === 'Estimation ludique, pas une probabilité scientifique de survie', 'game percentage clearly labelled');
     check(await page.locator('button[type=submit]').evaluate(button => button === document.activeElement), 'calculation does not steal focus');
     check(await page.locator('#resultNotice').isVisible() && (await page.locator('#resultAnnouncement').textContent()).includes('ton orchidée'), 'result link and live announcement');
     await page.evaluate(() => localStorage.removeItem('plantHistory'));
@@ -113,7 +113,7 @@ async function choosePlant(page, id) {
       { plantId: 'zz', score: 100, kind: 'conditions-match', schemaVersion: 2 },
     ])));
     await calculate(page);
-    check(await page.locator('.message').textContent() === 'Toujours verte. Ta plante approuve.', 'French verdict');
+    check((await page.locator('.message').textContent()).includes('cinq étoiles'), 'French verdict');
     const history = await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')));
     check(history.length === 3 && history[0].score === 80 && history[1].kind === 'conditions-match', 'old history untouched');
     check(history[2].kind === 'care-game' && history[2].schemaVersion === 3 && history[2].drainage === 'drained' && !('temperature' in history[2]), 'new score model recorded separately');
@@ -123,30 +123,30 @@ async function choosePlant(page, id) {
     check(await page.locator('#plantSearch').inputValue() === 'ZZ plant', 'selected common name translated');
     check(await page.locator('button[type=submit]').textContent() === 'Face the truth', 'original English button');
     check(await page.evaluate(() => selectedPlantId) === 'zz' && await page.locator('#water').inputValue() === 'dry' && await page.locator('#light').inputValue() === 'indirect' && await page.locator('#drainage').inputValue() === 'drained', 'all choices preserved after sorting');
-    check(await page.locator('.message').textContent() === 'Still green. Your plant approves.', 'result translated immediately');
+    check((await page.locator('.message').textContent()).includes('five-star'), 'result translated immediately');
     check(await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')).length) === 3, 'language switch does not calculate or add history');
     await calculate(page, { plant: 'aloe', water: 'surface', light: 'sun', expected: 80 });
-    check(!(await page.locator('.reason').textContent()).includes('−20') && (await page.locator('.reason').textContent()).includes('Let the soil dry'), 'moderate watering problem explained');
+    check(!(await page.locator('.care-advice').textContent()).includes('−20') && (await page.locator('.care-advice').textContent()).includes('Let the soil dry'), 'moderate watering problem explained');
     await calculate(page, { plant: 'aloe', water: 'moist', light: 'sun', expected: 60 });
-    check(!(await page.locator('.reason').textContent()).includes('−40'), 'penalties hidden; score still reflects impact');
+    check(!(await page.locator('.care-advice').textContent()).includes('−40'), 'penalties hidden; score still reflects impact');
     await calculate(page, { plant: 'zz', light: 'low', drainage: 'unknown', expected: 80 });
-    check(await page.locator('.reason li').count() === 3, 'light, drainage and the watering routine each appear once');
+    check(await page.locator('.reason li').count() === 2, 'light, drainage and the watering routine each appear once');
     await page.locator('#language').click();
-    check((await page.locator('.reason').textContent()).includes('Elle tolère cette lumière') && (await page.locator('.reason').textContent()).includes('Vérifie les trous'), 'diagnosis translated after imperfect result');
+    check((await page.locator('.care-advice').textContent()).includes('Elle tolère cette lumière') && (await page.locator('.care-advice').textContent()).includes('Vérifie les trous'), 'diagnosis translated after imperfect result');
     check(parseInt(await page.locator('.score').textContent()) === 80, 'score retained on language switch');
     await page.locator('#language').click();
     await calculate(page, { drainage: 'wet', expected: 70 });
-    check((await page.locator('.reason').textContent()).includes('Standing water'), 'drainage affects score and advice');
+    check((await page.locator('.care-advice').textContent()).includes('Standing water'), 'drainage affects score and advice');
     await calculate(page, { plant: 'schlumbergera', water: 'dry', light: 'sun', expected: 20 });
-    check((await page.locator('.reason').textContent()).includes('bleach the stems'), 'forest cactus advice differs from desert cactus');
+    check((await page.locator('.care-advice').textContent()).includes('bleach the stems'), 'forest cactus advice differs from desert cactus');
     await calculate(page, { plant: 'aloe', water: 'dry', light: 'indirect', expected: 80 });
-    check((await page.locator('.reason').textContent()).includes('Try a different light'), 'moderate light mismatch rendered');
+    check((await page.locator('.care-advice').textContent()).includes('Try a different light'), 'moderate light mismatch rendered');
     await calculate(page, { plant: 'yucca', water: 'dry', light: 'sun', expected: 90 });
-    check((await page.locator('.reason').textContent()).includes('tolerates this routine'), 'documented drought tolerance is not called a severe problem');
+    check((await page.locator('.care-advice').textContent()).includes('tolerates this routine'), 'documented drought tolerance is not called a severe problem');
     await calculate(page, { plant: 'bromeliad', water: 'dry', expected: 80 });
-    check((await page.locator('.reason').textContent()).includes('central cup is dry'), 'empty cup diagnosis');
+    check((await page.locator('.care-advice').textContent()).includes('central cup is dry'), 'empty cup diagnosis');
     await calculate(page, { plant: 'bromeliad', water: 'moist', expected: 60 });
-    check((await page.locator('.reason').textContent()).includes('roots do not need to stay wet'), 'wet roots diagnosis');
+    check((await page.locator('.care-advice').textContent()).includes('roots do not need to stay wet'), 'wet roots diagnosis');
     await calculate(page, { plant: 'bromeliad', water: 'tank', expected: 100 });
     await page.locator('#language').click();
     check(await page.locator('#water').inputValue() === 'tank' && (await page.locator('#waterHint').textContent()).includes('cœur des feuilles'), 'Guzmania habits kept and translated');
@@ -166,8 +166,8 @@ async function choosePlant(page, id) {
     await page.locator('#shareBtn').click();
     const share = await page.evaluate(() => window.shared);
     check(share.text.includes('ZZ plant') && share.text.includes('100%') && !share.text.includes('Aloe'), 'share uses the calculated snapshot');
-    check(share.title.startsWith('Greeny ·') && share.text.startsWith('🌱 Greeny ·') && share.text.includes('Survival potential') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
-    check(share.text.includes('https://nbzj4bq9sc-ship-it.github.io/Plants/'), 'share includes site link');
+    check(share.title.startsWith('Greeny ·') && share.text.startsWith('🌱 Greeny ·') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
+    check(share.url === 'https://nbzj4bq9sc-ship-it.github.io/Plants/', 'share includes site link');
     await page.locator('#water').selectOption('moist');
     await page.locator('#light').selectOption('low');
     await page.locator('#drainage').selectOption('wet');
@@ -175,7 +175,7 @@ async function choosePlant(page, id) {
     check((await page.evaluate(() => window.shared.text)) === share.text, 'edited conditions do not alter shared snapshot');
     await page.locator('#language').click();
     await page.locator('#shareBtn').click();
-    check((await page.evaluate(() => window.shared.text)).includes('Plante ZZ · Potentiel de survie : 100 %') && (await page.evaluate(() => window.shared.text)).includes('Ta plante approuve'), 'French share translated naturally');
+    check((await page.evaluate(() => window.shared.text)).includes('Plante ZZ : 100 %') && (await page.evaluate(() => window.shared.text)).includes('cinq étoiles'), 'French share translated naturally');
     await page.evaluate(() => {
       navigator.share = async () => { throw new DOMException('Canceled', 'AbortError'); };
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copied = text; } } });
@@ -192,7 +192,7 @@ async function choosePlant(page, id) {
     await page.locator('#shareBtn').click();
     check(await page.locator('#shareFallback').isVisible(), 'manual copy offered when clipboard is denied');
     await page.locator('#language').click();
-    check((await page.locator('#shareFallback').inputValue()).includes('ZZ plant · Survival potential'), 'manual share text updates with language');
+    check((await page.locator('#shareFallback').inputValue()).includes('My ZZ plant scored'), 'manual share text updates with language');
 
     for (const language of ['en', 'fr']) {
       if (await page.locator('html').getAttribute('lang') !== language) await page.locator('#language').click();
@@ -215,15 +215,28 @@ async function choosePlant(page, id) {
       if (await page.locator('html').getAttribute('lang') !== lang) await page.locator('#language').click();
       for (const plant of catalog) {
         await calculate(page, { plant: plant.id, water: plant.water, light: plant.light.ideal[0] });
-        check(await page.locator('#source').getAttribute('href') === plant.sourceUrl && await page.locator('.reason li[data-topic=water]').count() === 1 && await page.locator('.reason li[data-topic=light]').count() === 1, `${plant.id} selectable with unique advice and reference in ${lang}`);
+        check(await page.locator('#source').getAttribute('href') === plant.sourceUrl && await page.locator('.care-advice [data-topic=water]').count() === 1 && await page.locator('.care-advice [data-topic=light]').count() === 1, `${plant.id} selectable with unique advice and reference in ${lang}`);
       }
       await calculate(page, { plant: 'aloe', water: 'moist', light: 'low', drainage: 'wet', expected: 0 });
-      const care = await page.locator('.reason').textContent();
-      check(await page.locator('.tip').count() === 0 && await page.locator('.reason li').count() === 3 && (care.match(lang === 'fr' ? /sécher/g : /dry/g) || []).length === 1 && (care.match(lang === 'fr' ? /soucoupe/g : /saucer/g) || []).length === 1, `combined problems rendered once in ${lang}`);
+      const care = await page.locator('.care-advice').textContent();
+      check(await page.locator('.tip').count() === 0 && await page.locator('.reason li').count() === 2 && (care.match(lang === 'fr' ? /sécher/g : /dry/g) || []).length === 1 && (care.match(lang === 'fr' ? /soucoupe/g : /saucer/g) || []).length === 1, `combined problems rendered once in ${lang}`);
     }
     await calculate(page, { plant: 'aloe', water: 'moist', light: 'low', drainage: 'wet', expected: 0 });
-    check(await page.locator('.reason li').count() === 3 && (await page.locator('.message').textContent()).includes('évasion'), 'combined problems produce a playful low verdict with concrete advice');
+    check(await page.locator('.reason li').count() === 2 && await page.locator('#resultLevel').textContent() === 'Sauvetage à prévoir', 'combined problems produce a playful low verdict with concrete advice');
     await page.evaluate(() => scrollTo(0, 0));
+    check(await page.locator('#result').getAttribute('data-level') === 'poor', 'low score uses soft red');
+    check(await page.locator('#priorityAction').textContent() === 'Tu arroses trop tôt pour cette plante. Laisse sécher complètement la terre avant d’arroser à nouveau. Utilise une terre pour succulentes très drainante.', 'largest penalty first; ties stable');
+    check((await page.locator('.reason').textContent()).includes('lumière') && !(await page.locator('.reason').textContent()).includes('Tu arroses'), 'priority not repeated');
+    const verdict = await page.locator('.message').textContent();
+    await page.locator('#language').click();
+    await page.locator('#language').click();
+    check(await page.locator('.message').textContent() === verdict, 'variant stable across languages');
+    await calculate(page, { plant: 'aloe', water: 'moist', light: 'sun', expected: 60 });
+    check(await page.locator('#result').getAttribute('data-level') === 'mixed', 'middle score uses amber');
+    check(!(await page.evaluate(() => shareText())).includes('fenêtre'), 'watering joke does not invent a light problem');
+    await calculate(page);
+    check(await page.locator('#result').getAttribute('data-level') === 'good' && await page.locator('#priorityTitle').textContent() === 'Le bon geste à garder', 'healthy result has maintenance and green');
+    check(await page.locator('.reason li[data-topic=water]').count() === 0, 'healthy result invents no issues');
     await page.screenshot({ path: '/tmp/plants-mobile.png', fullPage: true });
     await page.setViewportSize({ width: 1280, height: 1000 });
     await calculate(page, { plant: 'monstera', water: 'surface', light: 'indirect', drainage: 'unknown', expected: 90 });
@@ -256,6 +269,14 @@ async function choosePlant(page, id) {
     await touch.page.locator('button[type=submit]').tap();
     check(await touch.page.locator('.score').textContent() === '100%' && await touch.page.locator('#resultNotice').isVisible(), 'touch calculation exposes result immediately with reduced motion');
     check(await touch.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no touch viewport overflow');
+    await touch.page.evaluate(() => {
+      Object.defineProperty(navigator, 'share', { configurable: true, value: async data => {
+        window.touchShare = { data, active: navigator.userActivation.isActive };
+      } });
+    });
+    await touch.page.locator('#shareBtn').tap();
+    check(await touch.page.evaluate(() => window.touchShare.active), 'simulated mobile share called during user activation');
+    check(await touch.page.evaluate(() => window.touchShare.data.url === publicUrl && window.touchShare.data.text.includes('Guzmania') && window.touchShare.data.text.includes('100%')), 'simulated mobile share has plant, score and public URL');
     await touch.context.close();
 
     const animated = await make({ locale: 'de-DE', reducedMotion: 'no-preference' });
@@ -271,7 +292,7 @@ async function choosePlant(page, id) {
     check(halfway > 0 && halfway < 100, 'percentage genuinely animates');
     await animated.page.locator('#language').click();
     await animated.page.waitForFunction(() => parseInt(document.querySelector('.score').textContent) === 100);
-    check((await animated.page.locator('.message').textContent()).includes('Ta plante approuve'), 'language changes during animation without losing verdict');
+    check((await animated.page.locator('.message').textContent()).includes('cinq étoiles'), 'language changes during animation without losing verdict');
     check((await animated.page.locator('#resultAnnouncement').textContent()).includes('Potentiel de survie'), 'accessible result translated immediately');
     await animated.page.locator('button[type=submit]').click();
     await animated.page.selectOption('#water', 'moist');
