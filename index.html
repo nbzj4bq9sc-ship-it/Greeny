@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Greeny · Will your plant survive?</title>
-  <link rel="stylesheet" href="style.css?v=e6e500e674109f89">
+  <link rel="stylesheet" href="style.css?v=a168bf572c9989ea">
   <script src="plants.js?v=fe8d8d6168b938dc" defer></script>
-  <script src="translations.js?v=069f80a0eb57aab2" defer></script>
+  <script src="translations.js?v=dac6b967745be508" defer></script>
   <script src="score.js?v=9ff19949a16ffba3" defer></script>
   <script src="search.js?v=4aa11357ff14032f" defer></script>
-  <script src="script.js?v=5e8426334d3b6911" defer></script>
+  <script src="script.js?v=78494a2923c429e5" defer></script>
 </head>
 <body>
   <main class="app">
@@ -44,12 +44,13 @@
         <div class="score" aria-hidden="true">0%</div>
         <span id="accessibleScore" class="sr-only"></span>
         <p class="hint" data-i18n="scoreHint"></p>
+        <p id="resultLevel"></p>
         <span class="emoji" aria-hidden="true">🌿</span><p class="message"></p>
       </div>
       <button id="shareBtn" type="button" class="share-btn" data-i18n="share"></button>
       <p id="shareStatus" role="status"></p>
       <textarea id="shareFallback" readonly hidden aria-label="Share text"></textarea>
-      <div class="care-advice"><h3 data-i18n="adviceTitle"></h3><ul class="reason"></ul>
+      <div class="care-advice"><div class="priority"><h3 id="priorityTitle"></h3><p id="priorityAction"></p></div><h3 id="otherAdviceTitle" data-i18n="adviceTitle"></h3><ul class="reason"></ul>
       <a id="source" target="_blank" rel="noopener noreferrer" data-i18n="source"></a></div>
     </section>
     <p id="resultAnnouncement" class="sr-only" role="status" aria-atomic="true"></p>

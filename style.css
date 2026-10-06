@@ -285,3 +285,11 @@ footer {
     scroll-behavior: auto !important;
   }
 }
+
+.result { --result-color: var(--green); }
+.result[data-level=mixed] { --result-color: #efc078; }
+.result[data-level=poor] { --result-color: #f0aaa6; }
+.result .score, #resultLevel { color: var(--result-color); }
+#resultLevel { font-weight: 650; margin-bottom: 8px; }
+.priority { border-left: 3px solid var(--result-color); padding-left: 14px; margin-bottom: 20px; }
+#priorityAction { margin: 8px 0 0; }
