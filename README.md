@@ -26,4 +26,4 @@ node tests/browser.cjs
 
 The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. It covers both languages, stored preference, switching after and during calculation, all 47 profiles, widths from 320 to 1280px, reduced motion, native sharing and clipboard/manual fallbacks, legacy and malformed history, blocked storage and rapid repeated calculations. Native sharing is mocked: device share sheets still need a real-device check.
 
-Read [SOURCES.md](SOURCES.md) for profile scope, scoring, history compatibility and the outstanding source-verification blocker. The broad care profiles must be checked before merging; the environment currently blocks the reference sites.
+Read [SOURCES.md](SOURCES.md) for profile scope, scoring, history compatibility and the verified NC State Extension references. The qualitative profiles are simplified guidance, not measurements or predictions.

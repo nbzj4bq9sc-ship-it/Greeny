@@ -83,14 +83,29 @@ async function calculate(page, plant = 'zz', water = 'dry', light = 'indirect') 
       }
       check(await page.locator('label[for=water]').textContent() === (locale === 'fr' ? 'Quand arrosez-vous ?' : 'When do you water?'), `${locale} label`);
       check(await page.evaluate(() => [...document.querySelectorAll('button, select, input[type=range]')].every(e => e.getBoundingClientRect().height >= 44)), 'touch target heights');
+      await page.setViewportSize({ width: 320, height: 720 });
+      check(await page.evaluate(() => [...document.querySelectorAll('select')].every(select => {
+        const canvas = document.createElement('canvas').getContext('2d');
+        canvas.font = getComputedStyle(select).font;
+        return [...select.options].every(option => canvas.measureText(option.textContent).width <= select.clientWidth - 48);
+      })), `select text fits on small screens ${locale}`);
     }
     const data = await page.evaluate(() => plants);
     check(new Set(data.map(p => p.id)).size === 47, 'unique IDs');
+    check(data.every(p => p.note.fr && p.note.en && p.sourceUrl.startsWith('https://plants.ces.ncsu.edu/plants/')), 'all 47 plants have bilingual sourced advice');
+    check(await page.evaluate(() => Object.keys(translations.en).every(key => translations.fr[key]) && Object.keys(translations.fr).every(key => translations.en[key])), 'translation key parity');
     for (const plant of data) {
-      check(['dry', 'surface', 'moist'].includes(plant.water) && ['low', 'indirect', 'sun'].includes(plant.light), `${plant.id} reachable form profile`);
+      check(['dry', 'surface', 'moist', 'tank'].includes(plant.water) && ['low', 'indirect', 'partial', 'sun'].includes(plant.light), `${plant.id} reachable form profile`);
       await calculate(page, plant.id, plant.water, plant.light);
     }
     check(await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')).length) === 48, 'all 47 profiles calculated');
+    await calculate(page, 'bromeliad', 'tank', 'low');
+    check((await page.locator('.tip').textContent()).includes('rosette'), 'verified tank bromeliad care');
+    await page.locator('#language').click();
+    check((await page.locator('.tip').textContent()).includes('rosette'), 'French plant-specific care');
+    await page.locator('#language').click();
+    await calculate(page, 'spider', 'moist', 'low');
+    check(await page.locator('.score').textContent() === '100%', 'documented shade tolerance accepted');
     await page.locator('#temperature').fill('35');
     await page.locator('#temperature').dispatchEvent('input');
     await calculate(page, 'hydrangea', 'moist', 'indirect');
@@ -99,7 +114,7 @@ async function calculate(page, plant = 'zz', water = 'dry', light = 'indirect') 
     await page.selectOption('#water', 'dry');
     await page.locator('button[type=submit]').click();
     check(await page.locator('.score').textContent() === '50%', 'one mismatch');
-    await page.selectOption('#light', 'low');
+    await page.selectOption('#light', 'sun');
     await page.locator('button[type=submit]').click();
     check(await page.locator('.score').textContent() === '0%', 'two mismatches');
     check((await page.locator('.reason').textContent()).length > 20, 'actionable advice');

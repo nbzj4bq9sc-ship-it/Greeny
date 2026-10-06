@@ -10,18 +10,19 @@ let shareStatus = '';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const t = key => translations[language][key];
 const format = (text, values) => text.replace(/\{(\w+)\}/g, (_, key) => values[key]);
-const sourceFor = plant => `https://plants.ces.ncsu.edu/plants/${(plant.source || plant.botanical).toLowerCase().replaceAll(' ', '-')}/`;
+const matchesWater = (plant, value) => (plant.acceptedWater || [plant.water]).includes(value);
+const matchesLight = (plant, value) => (plant.acceptedLight || [plant.light]).includes(value);
 
 function renderResult() {
   if (!result) return;
   const plant = plants.find(item => item.id === result.plantId);
   $('.message').textContent = `${result.score}${language === 'fr' ? ' %' : '%'} · ${t('messages')[Math.min(3, Math.floor(result.score / 30))]}`;
   const advice = [];
-  if (result.water !== plant.water) advice.push(format(t('waterAdvice'), { water: t({ dry: 'careDry', surface: 'careSurface', moist: 'careMoist' }[plant.water]) }));
-  if (result.light !== plant.light) advice.push(format(t('lightAdvice'), { light: t(plant.light).toLocaleLowerCase(language) }));
+  if (!matchesWater(plant, result.water)) advice.push(format(t('waterAdvice'), { water: t({ dry: 'careDry', surface: 'careSurface', moist: 'careMoist', tank: 'careTank' }[plant.water]) }));
+  if (!matchesLight(plant, result.light)) advice.push(format(t('lightAdvice'), { light: t(plant.light).toLocaleLowerCase(language) }));
   $('.reason').textContent = advice.join(' ') || t('matched');
-  $('.tip').textContent = t(plant.id === 'orchid' ? 'orchidTip' : 'tip');
-  $('#source').href = sourceFor(plant);
+  $('.tip').textContent = plant.note[language];
+  $('#source').href = plant.sourceUrl;
 }
 function renderLanguage() {
   document.documentElement.lang = language;
@@ -44,7 +45,11 @@ function renderLanguage() {
   if (!$('#shareFallback').hidden && result) $('#shareFallback').value = shareText();
 }
 function updateBotanical() {
-  $('#botanical').textContent = plants.find(plant => plant.id === $('#plantSelect').value).botanical;
+  const plant = plants.find(item => item.id === $('#plantSelect').value);
+  $('#botanical').textContent = plant.botanical;
+  const tank = $('#water option[value=tank]');
+  tank.hidden = tank.disabled = plant.water !== 'tank';
+  if (tank.disabled && $('#water').value === 'tank') $('#water').value = 'surface';
 }
 function saveHistory() {
   let history;
@@ -78,7 +83,7 @@ $('#conditions').addEventListener('submit', event => {
   const water = $('#water').value;
   const light = $('#light').value;
   // Equal editorial weights, not measured biological probabilities. Temperature is deliberately unscored.
-  const score = (water === plant.water ? 50 : 0) + (light === plant.light ? 50 : 0);
+  const score = (matchesWater(plant, water) ? 50 : 0) + (matchesLight(plant, light) ? 50 : 0);
   result = { plantId: plant.id, water, light, temperature: Number($('#temperature').value), score };
   $('#result').hidden = false;
   $('.emoji').textContent = score === 100 ? '🌿' : score === 50 ? '🌱' : '🪴';
