@@ -40,7 +40,10 @@ async function choosePlant(page, id) {
     for (const asset of ['plants.js', 'translations.js', 'score.js', 'search.js', 'script.js', 'style.css']) {
       check((await page.request.get(new URL(asset, url).href)).status() === 200, `${asset} served`);
     }
-    check(await page.locator('h1').textContent() === 'Greeny' && (await page.title()).startsWith('Greeny ·'), 'Greeny identity and page title');
+    check(await page.locator('h1').textContent() === 'Greeny' && (await page.title()) === 'Greeny', 'Greeny identity and page title');
+    for (const selector of ['meta[property="og:title"]', 'meta[property="og:site_name"]', 'meta[name="twitter:title"]']) {
+      check(await page.locator(selector).getAttribute('content') === 'Greeny', 'link preview title is Greeny');
+    }
     check(await page.locator('.intro').textContent() === 'Dis-nous comment ça se passe vraiment. Ta plante encaissera. Enfin… peut-être.', 'one exact French introduction');
     check(await page.locator('#plantSearch').getAttribute('placeholder') === 'Cherche ta plante…', 'French placeholder');
     await page.locator('#plantSearch').click();
@@ -50,6 +53,7 @@ async function choosePlant(page, id) {
     check(await page.locator('#plantSuggestions').isVisible(), 'empty click reopens catalogue after Escape');
     for (const lang of ['fr', 'en']) {
       if (await page.locator('html').getAttribute('lang') !== lang) await page.locator('#language').click();
+      check(await page.title() === 'Greeny', `exact page title in ${lang}`);
       await page.locator('#plantSearch').click();
       const names = await page.locator('[role=option] span').allTextContents();
       check(JSON.stringify(names) === JSON.stringify([...names].sort(new Intl.Collator(lang, { sensitivity: 'base' }).compare)), `complete catalogue sorted ${lang}`);
@@ -166,7 +170,7 @@ async function choosePlant(page, id) {
     await page.locator('#shareBtn').click();
     const share = await page.evaluate(() => window.shared);
     check(share.text.includes('ZZ plant') && share.text.includes('100%') && !share.text.includes('Aloe'), 'share uses the calculated snapshot');
-    check(share.title.startsWith('Greeny ·') && share.text.startsWith('🌱 Greeny ·') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
+    check(share.title === 'Greeny' && share.text.startsWith('🌱 Greeny ·') && share.text.includes('playful estimate') && share.text.includes('not scientific survival odds'), 'English share is fun without a scientific probability claim');
     check(share.url === 'https://nbzj4bq9sc-ship-it.github.io/Plants/', 'share includes site link');
     await page.locator('#water').selectOption('moist');
     await page.locator('#light').selectOption('low');
@@ -175,6 +179,7 @@ async function choosePlant(page, id) {
     check((await page.evaluate(() => window.shared.text)) === share.text, 'edited conditions do not alter shared snapshot');
     await page.locator('#language').click();
     await page.locator('#shareBtn').click();
+    check(await page.evaluate(() => window.shared.title === 'Greeny'), 'French share title is exactly Greeny');
     check((await page.evaluate(() => window.shared.text)).includes('Plante ZZ : 100 %') && (await page.evaluate(() => window.shared.text)).includes('cinq étoiles'), 'French share translated naturally');
     await page.evaluate(() => {
       navigator.share = async () => { throw new DOMException('Canceled', 'AbortError'); };
