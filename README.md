@@ -9,7 +9,7 @@ cd /workspace/Plants
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-No API keys, package installation or backend are needed. `plants.js` holds the sourced catalogue, `translations.js` holds UI copy, `score.js` calculates the game score, and `script.js` handles rendering and interactions. Styles are in `style.css`.
+No API keys, package installation or backend are needed. `plants.js` holds the sourced catalogue, search aliases and French genders; `translations.js` holds UI copy; `score.js` calculates the unchanged game score; `search.js` handles matching and possessives; `script.js` handles rendering and interactions. Styles are in `style.css`.
 
 ## Verify
 
@@ -19,12 +19,14 @@ With Node.js, Playwright, Chromium and the server running:
 node --check plants.js
 node --check translations.js
 node --check score.js
+node --check search.js
 node --check script.js
 node --test tests/score.test.cjs
+node --test tests/search.test.cjs
 node tests/browser.cjs
 ```
 
-The score tests cover concrete source-backed examples, watering differences, light tolerance, forest versus desert cacti, special Guzmania care, drainage, coarse bounds and improving conditions across every valid combination. Browser tests cover bilingual alphabetical sorting, preserved choices and verdicts, all 69 plants, mobile widths, touch controls, reduced motion, sharing fallbacks, legacy history and unavailable storage. The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. Native sharing is mocked; the operating system's share sheet still needs a real-device check.
+The score tests cover the existing calculation and coarse bounds across every valid combination. Search tests cover FR/EN common names, botanical names, aliases, accent and case handling, no matches and French possessives. Browser tests cover explicit selection, keyboard and touch suggestions, preserved answers and translated verdicts, all 69 plants, mobile widths, reduced motion, sharing the last calculated result, copy fallbacks, legacy history and unavailable storage. The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. Native sharing is mocked; the operating system's share sheet still needs a real-device check.
 
 To generate a self-contained interactive review file outside the checkout:
 
