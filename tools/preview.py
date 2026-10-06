@@ -9,7 +9,7 @@ parser.add_argument('output', type=Path)
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 app = (root / 'index.html').read_text()
-app = app.replace('<link rel="stylesheet" href="style.css">', '<style>' + (root / 'style.css').read_text() + '</style>')
+app = re.sub(r'<link rel="stylesheet" href="style\.css(?:\?[^\"]*)?">', lambda _: '<style>' + (root / 'style.css').read_text() + '</style>', app)
 app = re.sub(r'\s*<script src="[^"]+" defer></script>', '', app)
 app = app.replace('href="./"', 'href="#"')
 scripts = '\n'.join('<script>' + (root / name).read_text() + '</script>' for name in ('plants.js', 'translations.js', 'score.js', 'search.js', 'script.js'))

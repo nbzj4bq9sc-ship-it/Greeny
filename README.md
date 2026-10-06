@@ -13,9 +13,12 @@ No API keys, package installation or backend are needed. `plants.js` holds the s
 
 ## Verify
 
+After editing CSS or JavaScript, run `python3 tools/version_assets.py` and commit the updated `index.html` alongside the assets. Each local CSS/JS URL has a content hash (`?v=…`): changed files get new URLs, so browsers with an older cached copy fetch the new version. Unchanged files keep their cached version. No application code, user data or cache clearing is involved.
+
 With Node.js, Playwright, Chromium and the server running:
 
 ```sh
+python3 tools/version_assets.py --check
 node --check plants.js
 node --check translations.js
 node --check score.js
@@ -24,6 +27,7 @@ node --check script.js
 node --test tests/score.test.cjs
 node --test tests/search.test.cjs
 node tests/browser.cjs
+node --test tests/cache.test.cjs
 ```
 
 The score tests cover the existing calculation and coarse bounds across every valid combination. Search tests cover FR/EN common names, botanical names, aliases, accent and case handling, no matches and French possessives. Browser tests cover explicit selection, keyboard and touch suggestions, preserved answers and translated verdicts, all 69 plants, mobile widths, reduced motion, sharing the last calculated result, copy fallbacks, legacy history and unavailable storage. The browser suite accepts `PLANTS_URL` and `CHROMIUM_PATH`. Native sharing is mocked; the operating system's share sheet still needs a real-device check.
