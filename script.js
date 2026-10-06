@@ -1,147 +1,171 @@
-const plantSelect = document.getElementById("plantSelect");
-const resultDiv = document.getElementById("result");
-const scoreDiv = document.querySelector(".score");
-const emojiDiv = document.querySelector(".emoji");
-const messageDiv = document.querySelector(".message");
-const reasonDiv = document.querySelector(".reason");
-const tipDiv = document.querySelector(".tip");
-const shareBtn = document.getElementById("shareBtn");
-const tempSlider = document.getElementById("temperature");
-const tempValue = document.getElementById("tempValue");
+'use strict';
+const $ = selector => document.querySelector(selector);
+const readStorage = key => { try { return localStorage.getItem(key); } catch { return null; } };
+const writeStorage = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
+const savedLanguage = readStorage('plantsLanguage');
+let language = ['fr', 'en'].includes(savedLanguage) ? savedLanguage : (navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en');
+let result = null;
+let animation = 0;
+let shareStatus = '';
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const t = key => translations[language][key];
+const format = (text, values) => text.replace(/\{(\w+)\}/g, (_, key) => values[key]);
+const formatScore = score => `${score}${language === 'fr' ? ' %' : '%'}`;
 
-// Update temperature display
-tempSlider.addEventListener("input", () => {
-  tempValue.textContent = `${tempSlider.value}°C`;
+function renderResult() {
+  if (!result) return;
+  const plant = plants.find(item => item.id === result.plantId);
+  $('#resultTitle').textContent = format(t('resultTitle'), { plant: plant.name[language] });
+  $('#accessibleScore').textContent = format(t('accessibleScore'), { score: result.score });
+  $('.message').textContent = t('verdicts')[verdictIndex(result.score)];
+  $('.score').textContent = formatScore(animation ? parseInt($('.score').textContent) || 0 : result.score);
+  const advice = result.issues.map(issue => {
+    const item = document.createElement('li');
+    item.textContent = `−${issue.points} · ${format(t('issues')[issue.type], {
+      water: t('careWater')[plant.water], light: t('careLight')[plant.light.ideal[0]],
+    })}`;
+    return item;
+  });
+  if (!advice.length) {
+    const item = document.createElement('li');
+    item.textContent = t('matched');
+    advice.push(item);
+  }
+  $('.reason').replaceChildren(...advice);
+  $('.tip').textContent = plant.note[language];
+  $('#source').href = plant.sourceUrl;
+}
+
+function renderWater(plant) {
+  const previous = $('#water').value;
+  const choices = plant.water === 'tank' ? { dry: 'tankDry', tank: 'tank', moist: 'tankWet' } : { dry: 'dry', surface: 'surface', moist: 'moist' };
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.disabled = true;
+  placeholder.textContent = t('chooseWater');
+  const options = Object.entries(choices).map(([value, key]) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = t(key);
+    return option;
+  });
+  $('#water').replaceChildren(placeholder, ...options);
+  $('#water').value = Object.hasOwn(choices, previous) ? previous : '';
+  $('#waterHint').textContent = t(plant.water === 'tank' ? 'tankHint' : 'waterHint');
+}
+
+function updatePlant() {
+  const plant = plants.find(item => item.id === $('#plantSelect').value);
+  $('#botanical').textContent = plant.botanical;
+  renderWater(plant);
+}
+
+function renderLanguage() {
+  document.documentElement.lang = language;
+  document.title = t('pageTitle');
+  document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+  const selection = $('#plantSelect').value || 'pothos';
+  const collator = new Intl.Collator(language, { sensitivity: 'base' });
+  $('#plantSelect').replaceChildren(...[...plants].sort((a, b) => collator.compare(a.name[language], b.name[language])).map(plant => {
+    const option = document.createElement('option');
+    option.value = plant.id;
+    option.textContent = plant.name[language];
+    return option;
+  }));
+  $('#plantSelect').value = selection;
+  $('#language').textContent = language === 'fr' ? 'FR / EN' : 'EN / FR';
+  $('#language').setAttribute('aria-label', t('language'));
+  $('#shareFallback').setAttribute('aria-label', t('shareLabel'));
+  $('#shareStatus').textContent = shareStatus ? t(shareStatus) : '';
+  updatePlant();
+  renderResult();
+  if (!$('#shareFallback').hidden && result) $('#shareFallback').value = shareText();
+}
+
+function saveHistory() {
+  let history;
+  try { history = JSON.parse(readStorage('plantHistory') || '[]'); } catch { history = []; }
+  if (!Array.isArray(history)) history = [];
+  history.push({ ...result, schemaVersion: 3, kind: 'care-game', date: new Date().toISOString() });
+  writeStorage('plantHistory', JSON.stringify(history));
+}
+
+function finishAnimation() {
+  cancelAnimationFrame(animation);
+  animation = 0;
+  if (result) $('.score').textContent = formatScore(result.score);
+}
+
+function animateScore() {
+  cancelAnimationFrame(animation);
+  if (reducedMotion.matches || result.score === 0) { finishAnimation(); return; }
+  const start = performance.now();
+  $('.score').textContent = formatScore(0);
+  function frame(now) {
+    const progress = Math.min(1, (now - start) / 800);
+    $('.score').textContent = formatScore(Math.round(result.score * (1 - (1 - progress) ** 3)));
+    animation = progress < 1 ? requestAnimationFrame(frame) : 0;
+  }
+  animation = requestAnimationFrame(frame);
+}
+
+$('#conditions').addEventListener('submit', event => {
+  event.preventDefault();
+  const plant = plants.find(item => item.id === $('#plantSelect').value);
+  const conditions = { water: $('#water').value, light: $('#light').value, drainage: $('#drainage').value };
+  result = { plantId: plant.id, ...conditions, ...calculateScore(plant, conditions) };
+  $('#result').hidden = false;
+  $('.emoji').textContent = result.score >= 70 ? '🌿' : result.score >= 40 ? '🌱' : '🪴';
+  shareStatus = '';
+  $('#shareStatus').textContent = '';
+  $('#shareFallback').hidden = true;
+  renderResult();
+  saveHistory();
+  animateScore();
 });
-
-// Populate plant select
-plants.forEach((plant, index) => {
-  const option = document.createElement("option");
-  option.value = index;
-  option.textContent = plant.name;
-  plantSelect.appendChild(option);
+$('#language').addEventListener('click', () => {
+  language = language === 'fr' ? 'en' : 'fr';
+  writeStorage('plantsLanguage', language);
+  renderLanguage();
 });
+$('#plantSelect').addEventListener('change', updatePlant);
+reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) finishAnimation(); });
 
-// Emoji by score
-function getEmoji(score){
-  if(score <= 10) return "☠️";
-  if(score <= 25) return "💀";
-  if(score <= 50) return "☹️";
-  if(score <= 75) return "⚠️";
-  if(score <= 90) return "🌿";
-  return "🌟";
+function shareText() {
+  const plant = plants.find(item => item.id === result.plantId);
+  return `${format(t('shareText'), { plant: plant.name[language], score: result.score, verdict: t('verdicts')[verdictIndex(result.score)] })}\nhttps://nbzj4bq9sc-ship-it.github.io/Plants/`;
 }
-
-// Message by score
-function getMessage(score) {
-  if(score <= 10) return "Critical care needed!";
-  if(score <= 25) return "Major care needed!";
-  if(score <= 50) return "Some care adjustments recommended.";
-  if(score <= 75) return "Minor tweaks recommended.";
-  if(score <= 90) return "Looking good!";
-  return "Perfect! Your plant should thrive!";
-}
-
-// Main issue message
-function getMainIssue(plant, userWater, userLight, userTemp) {
-  const waterDiff = Math.abs(userWater - plant.water);
-  const lightDiff = Math.abs(userLight - plant.light);
-  const tempDiff = Math.abs(userTemp - plant.temp);
-
-  if (waterDiff > 0) {
-    if(userWater > plant.water) return `You should water your ${plant.name} ${plant.water} times per week maximum.`;
-    else return `You should water your ${plant.name} at least ${plant.water} times per week.`;
-  }
-  if (lightDiff > 0) {
-    if(userLight > plant.light) return `Reduce light exposure for your ${plant.name}.`;
-    else return `Increase light for your ${plant.name}.`;
-  }
-  if (tempDiff > 5) {
-    return `Adjust the temperature around your ${plant.name}.`;
-  }
-  return ""; // no main issue
-}
-
-// Animate score
-function animateScore(targetScore, plant, userWater, userLight, userTemp) {
-  let current = 0;
-  scoreDiv.textContent = "0%";
-  emojiDiv.textContent = "🌿";
-  scoreDiv.classList.remove("pulse", "bounce");
-  messageDiv.classList.remove("fade-in", "show");
-  reasonDiv.classList.remove("fade-in", "show", "hidden"); // ensure visible
-  tipDiv.classList.remove("fade-in", "show");
-  shareBtn.classList.remove("fade-in", "show", "hidden");
-
-  const interval = setInterval(() => {
-    current++;
-    if(current > targetScore) current = targetScore;
-    scoreDiv.textContent = current + "%";
-    emojiDiv.textContent = getEmoji(current);
-    scoreDiv.classList.add("pulse");
-
-    if(current === targetScore) {
-      clearInterval(interval);
-      scoreDiv.classList.add("bounce");
-      messageDiv.textContent = getMessage(targetScore);
-      reasonDiv.textContent = getMainIssue(plant, userWater, userLight, userTemp); // Main issue precise
-      tipDiv.textContent = plant.tip;
-
-      messageDiv.classList.add("fade-in", "show");
-      reasonDiv.classList.add("fade-in", "show");
-      tipDiv.classList.add("fade-in", "show");
-      shareBtn.classList.add("fade-in", "show");
-
-      saveHistory(plantSelect.value, targetScore);
+$('#shareBtn').addEventListener('click', async () => {
+  if (!result) return;
+  const text = shareText();
+  shareStatus = '';
+  $('#shareStatus').textContent = '';
+  $('#shareFallback').hidden = true;
+  $('#shareBtn').disabled = true;
+  try {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: t('pageTitle'), text });
+        shareStatus = 'shared';
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+      }
     }
-  }, 15);
-}
-
-// Local history
-function saveHistory(plantIndex, score){
-  let history = JSON.parse(localStorage.getItem("plantHistory")||"[]");
-  const plant = plants[plantIndex];
-  history.push({name: plant.name, score, date: new Date().toISOString()});
-  localStorage.setItem("plantHistory", JSON.stringify(history));
-}
-
-// Calculate function
-function calculate() {
-  const plant = plants[plantSelect.value];
-  const userWater = parseInt(document.getElementById("water").value);
-  const userLight = parseInt(document.getElementById("light").value);
-  const userTemp = parseInt(document.getElementById("temperature").value);
-
-  let score = 100;
-
-  const waterDiff = Math.abs(userWater - plant.water);
-  const lightDiff = Math.abs(userLight - plant.light);
-  const tempDiff = Math.abs(userTemp - plant.temp);
-
-  if (waterDiff > 0) score -= waterDiff * 20;
-  if (lightDiff > 0) score -= lightDiff * 15;
-  if (tempDiff > 5) score -= 15;
-
-  score = Math.max(0, Math.min(100, score));
-
-  animateScore(score, plant, userWater, userLight, userTemp);
-  resultDiv.classList.remove("hidden");
-}
-
-// Share button (text + link only)
-shareBtn.addEventListener("click", () => {
-  const plant = plants[plantSelect.value];
-  const score = scoreDiv.textContent;
-  const shareText = `My ${plant.name} has a ${score} chance of survival!\nhttps://nbzj4bq9sc-ship-it.github.io/Plants/`;
-
-  if (navigator.share) {
-    navigator.share({
-      title: 'Will my plant survive?',
-      text: shareText
-    }).catch(err => console.log('Share cancelled', err));
-  } else {
-    navigator.clipboard.writeText(shareText).then(()=>{
-      alert("Result copied! Share it anywhere.");
-    });
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(text);
+      shareStatus = 'copied';
+    } catch {
+      shareStatus = 'copyFailed';
+      $('#shareFallback').value = text;
+      $('#shareFallback').hidden = false;
+      $('#shareFallback').focus();
+      $('#shareFallback').select();
+    }
+  } finally {
+    $('#shareBtn').disabled = false;
+    $('#shareStatus').textContent = shareStatus ? t(shareStatus) : '';
   }
 });
+renderLanguage();
