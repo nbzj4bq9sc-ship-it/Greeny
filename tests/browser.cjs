@@ -32,6 +32,8 @@ async function calculate(page, plant = 'zz', water = 'dry', light = 'indirect') 
     await page.evaluate(() => localStorage.setItem('plantHistory', JSON.stringify([{ name: 'ZZ Plant', score: 80, date: '2025-01-01' }])));
     await calculate(page);
     check(await page.locator('#result').isVisible(), 'visible result');
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+    check(await page.locator('#language').evaluate(button => { const r = button.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), 'language switch remains visible after scrolling');
     check(await page.locator('.message').textContent() === '100 % · Vos conditions correspondent à ce profil général.', 'French result');
     const history = await page.evaluate(() => JSON.parse(localStorage.getItem('plantHistory')));
     check(history.length === 2 && history[0].score === 80 && history[1].plantId === 'zz' && history[1].kind === 'conditions-match', 'legacy history preserved, stable new schema');
